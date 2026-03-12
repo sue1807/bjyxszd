@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>幕布导入 · 五谷丰登</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <style>
+    :root {
+      --bg: #f7f3ee; --card: #fff; --text: #3d2f2d;
+      --muted: #a08880; --line: #ead8d0;
+      --accent: #c9847a; --accent-deep: #b06b62;
+      --soft: #fdf7f5;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg); color: var(--text);
+      padding: 20px; line-height: 1.6;
+    }
+    .box {
+      max-width: 680px; margin: 0 auto;
+      background: #fff; border-radius: 20px;
+      border: 1px solid var(--line);
+      box-shadow: 0 6px 24px rgba(160,100,80,0.1);
+      padding: 24px;
+    }
+    h1 { color: var(--accent-deep); font-size: 22px; margin-bottom: 6px; }
+    p { color: var(--muted); font-size: 14px; line-height: 1.7; margin-bottom: 14px; }
+    input[type="file"] { width: 100%; margin: 12px 0; font-size: 14px; }
+    .btns { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+    button {
+      border: none; border-radius: 11px; padding: 10px 18px;
+      cursor: pointer; font: inherit; font-size: 14px; font-weight: 600;
+    }
+    .btn-p { background: var(--accent); color: #fff; }
+    .btn-p:hover { background: var(--accent-deep); }
+    .btn-s { background: #f2e8e5; color: var(--accent-deep); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .status {
+      padding: 10px 14px; border-radius: 12px;
+      background: var(--soft); border: 1px solid var(--line);
+      font-size: 14px; color: var(--muted);
+      margin-bottom: 14px; white-space: pre-wrap;
+    }
+    .status.ok { color: #6a9a6a; background: #f0faf0; border-color: #c0ddc0; }
+    .status.err { color: #b06060; background: #fff0f0; border-color: #ddc0c0; }
+    .preview {
+      max-height: 320px; overflow: auto;
+      border: 1px solid var(--line); border-radius: 12px;
+      background: var(--soft); padding: 14px;
+      font-size: 13px; line-height: 1.8;
+    }
+    .preview-item { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+    .preview-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .preview-title { font-weight: 700; color: var(--accent-deep); margin-bottom: 4px; }
+    .preview-meta { color: var(--muted); font-size: 12px; }
+    .note-small { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+<div class="box">
+  <h1>📥 幕布记录导入</h1>
+  <p>从幕布导出 HTML 文件，上传后会自动解析书名、作者、主角、标签和读后感，全部写入 <b>BL小说</b>，评分默认 <b>0</b>，之后手动补充。</p>
+  <p class="note-small">⚠️ 请先在主页面登录，再打开此页面。导入前建议先"解析预览"确认数据正确。</p>
+
+  <input type="file" id="htmlFile" accept=".html,.htm" />
+
+  <div class="btns">
+    <button class="btn-s" id="btnParse">🔍 解析预览</button>
+    <button class="btn-p" id="btnImport">✅ 确认导入</button>
+  </div>
+
+  <div class="status" id="status">等待选择幕布 HTML 文件…</div>
+  <div class="preview" id="preview">解析结果会显示在这里（最多预览前10条）</div>
+</div>
+
+<script>
+  const SUPABASE_URL = window.APP_CONFIG?.SUPABASE_URL || '';
+  const SUPABASE_ANON_KEY = window.APP_CONFIG?.SUPABASE_ANON_KEY || '';
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const btnParse = document.getElementById('btnParse');
+  const btnImport = document.getElementById('btnImport');
+  const statusEl = document.getElementById('status');
+  const previewEl = document.getElementById('preview');
+  const fileEl = document.getElementById('htmlFile');
+
+  let currentUser = null;
+  let parsedRows = [];
+
+  function setStatus(text, cls = '') {
+    statusEl.className = 'status ' + cls;
+    statusEl.textContent = text;
+  }
+
+  async function init() {
+    if (!SUPABASE_URL) { setStatus('未找到 config.js 配置', 'err'); return; }
+    const { data } = await supabaseClient.auth.getSession();
+    currentUser = data?.session?.user || null;
+    if (!currentUser) {
+      setStatus('未检测到登录状态，请先在主页面登录再回来。', 'err');
+    } else {
+      setStatus(`已登录：${currentUser.email}`);
+    }
+  }
+
+  function parseHtml(htmlText) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlText, 'text/html');
+    const contentDivs = Array.from(doc.querySelectorAll('.content.mm-editor'));
+    const rows = [];
+
+    for (const div of contentDivs) {
+      const text = div.textContent.trim();
+      // Match: 1. 《书名》by作者，主角x主角  or  1.《书名》...
+      const titleMatch = text.match(/^\d+[\.\s、]*[《「]([^》」]+)[》」](?:\s*by\s*([^，,\n]+))?(?:[，,]\s*([^\n]+))?/);
+      if (!titleMatch) continue;
+
+      const name = titleMatch[1].trim();
+      const author = (titleMatch[2] || '').trim();
+      const mainChars = (titleMatch[3] || '').trim();
+
+      // Get note div (sibling or next)
+      const noteDivs = [];
+      // Look for note in same li
+      const li = div.closest('li.node');
+      if (li) {
+        const noteDiv = li.querySelector('.note.mm-editor');
+        if (noteDiv) noteDivs.push(noteDiv.textContent.trim());
+        // Also grab children content
+        const children = li.querySelectorAll('.children .content.mm-editor');
+        children.forEach(c => noteDivs.push(c.textContent.trim()));
+      }
+
+      const fullNote = noteDivs.join('\n').trim();
+
+      // Extract tags: first line before 的/是/，/。 split by /
+      const firstLine = fullNote.split('\n')[0] || '';
+      const tagPart = firstLine.split('，')[0] || firstLine.split('。')[0] || '';
+      const rawTags = tagPart.split('/').map(s => s.replace(/[❤️💕🌙✨]/g, '').trim()).filter(s => s.length >= 1 && s.length <= 10);
+      const tags = rawTags.slice(0, 8);
+
+      if (!name) continue;
+
+      rows.push({ name, author, main_characters: mainChars, tags, notes: fullNote });
+    }
+
+    return rows;
+  }
+
+  function renderPreview(rows) {
+    if (!rows.length) { previewEl.textContent = '没有解析到记录，请检查文件格式。'; return; }
+    previewEl.innerHTML = rows.slice(0, 10).map((r, i) => `
+      <div class="preview-item">
+        <div class="preview-title">${i+1}. 《${r.name}》</div>
+        <div class="preview-meta">
+          作者：${r.author || '—'} ｜ 主角：${r.main_characters || '—'}<br/>
+          标签：${r.tags.join(' / ') || '—'}<br/>
+          备注：${r.notes.slice(0, 100)}${r.notes.length > 100 ? '…' : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  btnParse.addEventListener('click', async () => {
+    if (!currentUser) { alert('请先登录'); return; }
+    const file = fileEl.files[0];
+    if (!file) { alert('请先选择 HTML 文件'); return; }
+    btnParse.disabled = true;
+    setStatus('解析中…');
+    try {
+      const text = await file.text();
+      parsedRows = parseHtml(text);
+      if (!parsedRows.length) {
+        setStatus('没有识别到记录，请确认是幕布导出的 HTML', 'err');
+      } else {
+        setStatus(`✓ 解析成功，共识别 ${parsedRows.length} 条记录（下方预览前10条）`, 'ok');
+      }
+      renderPreview(parsedRows);
+    } catch(e) {
+      setStatus('解析失败：' + e.message, 'err');
+    } finally {
+      btnParse.disabled = false;
+    }
+  });
+
+  btnImport.addEventListener('click', async () => {
+    if (!currentUser) { alert('请先登录'); return; }
+    if (!parsedRows.length) { alert('请先点解析预览'); return; }
+    btnImport.disabled = true; btnParse.disabled = true;
+    setStatus(`准备导入 ${parsedRows.length} 条…`);
+    try {
+      const payload = parsedRows.map(r => ({
+        user_id: currentUser.id,
+        name: r.name,
+        type: 'BL小说',
+        rating: 0,
+        tags: r.tags,
+        notes: r.notes,
+        author: r.author,
+        main_characters: r.main_characters,
+        review_date: null,
+        intro: '',
+        cover_url: '',
+        story_summary: ''
+      }));
+
+      // Insert in batches of 50
+      let total = 0;
+      for (let i = 0; i < payload.length; i += 50) {
+        const batch = payload.slice(i, i + 50);
+        const { error } = await supabaseClient.from('spirit_records').insert(batch);
+        if (error) { setStatus('导入失败：' + error.message, 'err'); return; }
+        total += batch.length;
+        setStatus(`导入中… ${total}/${payload.length}`);
+      }
+      setStatus(`🎉 导入成功！共导入 ${total} 条，回主页面查看吧。`, 'ok');
+    } catch(e) {
+      setStatus('导入异常：' + e.message, 'err');
+    } finally {
+      btnImport.disabled = false; btnParse.disabled = false;
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>
