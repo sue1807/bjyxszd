@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>五谷丰登 - 云端版</title>
+  <style>
+    :root {
+      --bg: #f9f5f0;
+      --card: #ffffff;
+      --text: #4b3f3d;
+      --muted: #9a7d7a;
+      --line: #ecdada;
+      --accent: #e8a8a8;
+      --accent-deep: #d89090;
+      --soft: #fef9f9;
+      --danger: #d97c7c;
+      --shadow: 0 6px 22px rgba(160, 120, 120, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      font-size: 30px;
+      color: #8c5e58;
+      margin-bottom: 8px;
+    }
+    h2 {
+      font-size: 22px;
+      color: #7a5c58;
+      margin-bottom: 12px;
+    }
+    .sub, .small { color: var(--muted); }
+    .small { font-size: 12px; }
+
+    .hidden { display: none !important; }
+
+    .auth-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 520px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 26px;
+    }
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(249,245,240,0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #f1dfdf;
+    }
+
+    .header-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #8c5e58;
+      margin-bottom: 4px;
+    }
+
+    .brand-sub {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .field { margin-bottom: 14px; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #7a5c58;
+    }
+
+    input, textarea, select, button {
+      font: inherit;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: var(--soft);
+      color: var(--text);
+      outline: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(232, 168, 168, 0.18);
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 11px 16px;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--accent-deep); }
+
+    .btn-secondary {
+      background: #f0e1e1;
+      color: #7a5c58;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-icon {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      font-size: 30px;
+      line-height: 1;
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(216, 144, 144, 0.28);
+    }
+
+    .floating-add {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 20;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff7f7;
+      border: 1px solid var(--line);
+      color: #8b6762;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      max-width: 100%;
+      word-break: break-all;
+    }
+
+    .record-item {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      background: #fff;
+      margin-bottom: 12px;
+    }
+
+    .tag, .tag-chip {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      margin-right: 8px;
+      margin-bottom: 8px;
+      border: 1px solid var(--line);
+      background: #f8e6e6;
+      color: #9d7671;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .tag-chip.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .summary-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff8f8;
+      padding: 12px;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+
+    .summary-card:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow);
+    }
+
+    .summary-name {
+      font-size: 13px;
+      color: #8c5e58;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .summary-count {
+      font-size: 24px;
+      font-weight: 700;
+      color: #b06f6f;
+    }
+
+    .stats-total {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, #fffafa, #fff3f3);
+      margin-bottom: 10px;
+    }
+
+    .stats-total-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .stats-total-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #8c5e58;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .calendar-weekday {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 4px 0;
+    }
+
+    .calendar-day {
+      aspect-ratio: 1 / 1;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      color: #8c5e58;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .calendar-day.empty {
+      background: transparent;
+      border-color: transparent;
+      cursor: default;
+    }
+
+    .calendar-day.has-record {
+      background: #fff0f0;
+      border-color: #e8a8a8;
+      font-weight: 700;
+    }
+
+    .calendar-day.selected {
+      background: #e8a8a8;
+      color: #fff;
+      border-color: #e8a8a8;
+    }
+
+    .calendar-dot {
+      position: absolute;
+      bottom: 6px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.75;
+    }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      padding: 34px 10px;
+    }
+
+    .range-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    input[type="range"] {
+      padding: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+    }
+
+    .rating-badge {
+      min-width: 118px;
+      text-align: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #fff2f2;
+      border: 1px solid var(--line);
+      color: #8c5e58;
+      font-weight: 700;
+    }
+
+    dialog {
+      width: min(760px, calc(100vw - 16px));
+      border: none;
+      border-radius: 22px;
+      padding: 0;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+      max-height: 92vh;
+    }
+
+    dialog::backdrop {
+      background: rgba(60, 40, 40, 0.35);
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-card {
+      padding: 16px;
+      max-height: 88vh;
+      overflow: auto;
+      background: #fff;
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .tag-area {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fffafa;
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+    }
+
+    .status {
+      min-height: 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 720px) {
+      .container { padding: 12px; }
+      .card { padding: 12px; margin-bottom: 12px; }
+      .header-inner {
+        padding: 12px;
+        align-items: flex-start;
+      }
+      .brand-title { font-size: 18px; }
+      .brand-sub { font-size: 11px; }
+      .header-actions {
+        flex-direction: column;
+        align-items: stretch;
+        min-width: 124px;
+      }
+      .pill { justify-content: center; }
+      .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .summary-count { font-size: 20px; }
+      .stats-total-value { font-size: 24px; }
+      .calendar-day { font-size: 12px; }
+      .floating-add { right: 16px; bottom: 16px; }
+      .btn-icon { width: 58px; height: 58px; }
+      .modal-card { padding: 14px; }
+      .tag-area { padding: 10px; }
+      button { padding: 10px 14px; }
+      textarea { min-height: 92px; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <section id="authScreen" class="auth-wrap">
+    <div class="auth-card">
+      <h1>🏠 五谷丰登</h1>
+      <p class="sub">登录后进入记录库。手机和电脑数据自动同步。</p>
+      <div class="auth-tabs">
+        <button class="btn-primary auth-tab" id="tabSignIn">登录</button>
+        <button class="btn-secondary auth-tab" id="tabSignUp">注册</button>
+      </div>
+      <div class="field">
+        <label for="email">邮箱</label>
+        <input id="email" type="email" placeholder="请输入邮箱" autocomplete="username" />
+      </div>
+      <div class="field">
+        <label for="password">密码</label>
+        <input id="password" type="password" placeholder="请输入密码" autocomplete="current-password" />
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+        <button class="btn-primary" id="btnAuthMain">登录</button>
+        <button class="btn-secondary" id="btnAuthToggle">切换到注册</button>
+      </div>
+      <div class="status" id="authStatus"></div>
+    </div>
+  </section>
+
+  <section id="appScreen" class="hidden">
+    <div class="app-header">
+      <div class="header-inner">
+        <div>
+          <div class="brand-title">🏠 五谷丰登</div>
+          <div class="brand-sub">按类型记录、标签归档、云端同步</div>
+        </div>
+        <div class="header-actions">
+          <span class="pill" id="userEmail">-</span>
+          <button class="btn-secondary" id="btnSignOut">退出</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="card">
+        <div style="display:flex; justify-content:center; margin-bottom:12px;">
+          <input id="searchInput" type="text" placeholder="搜索名称 / 标签 / 笔记" style="max-width: 420px; width:100%;" />
+        </div>
+        <div class="small" id="globalStatus">正在初始化…</div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="card">
+          <div class="toolbar"><h2 style="margin:0;">统计</h2></div>
+          <div id="statsOverview" class="empty">还没有记录统计。</div>
+        </div>
+        <div class="card">
+          <div class="toolbar"><h2 style="margin:0;">日期浏览</h2></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
+            <input id="monthFilter" type="month" style="max-width:220px;" />
+            <button class="btn-secondary" id="btnClearMonthFilter">清除</button>
+          </div>
+          <div id="calendarWrap"></div>
+          <div class="small" id="calendarHint" style="margin-top:8px;">有记录的日期会高亮，点日期可筛选下方列表。</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <div class="pill">当前用户：<span id="userEmailInline">-</span></div>
+          <button class="btn-secondary" id="btnReload">刷新列表</button>
+        </div>
+        <div id="recordsList" class="empty">还没有记录，点右下角 + 添加第一条。</div>
+      </div>
+    </div>
+
+    <button class="btn-icon floating-add" id="btnOpenAdd" title="新增记录">+</button>
+  </section>
+
+  <dialog id="recordDialog">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 style="margin-bottom:4px;">新增记录</h2>
+          <div class="small">填写后保存到云端。</div>
+        </div>
+        <button class="btn-secondary" id="btnCloseDialog">关闭</button>
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="name">名称</label>
+          <input id="name" type="text" placeholder="作品名称" />
+        </div>
+        <div class="field">
+          <label for="type">类型</label>
+          <select id="type"></select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="rating">评分</label>
+        <div class="range-wrap">
+          <input id="rating" type="range" min="0" max="10" step="0.5" value="8" />
+          <div class="rating-badge" id="ratingValue">8 / 10 · 推荐</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>标签（可多选）</label>
+        <div class="tag-area">
+          <div id="tagChips"></div>
+          <div class="grid-2" style="margin-top:8px;">
+            <div>
+              <label for="customTagInput">新增自定义标签</label>
+              <input id="customTagInput" type="text" placeholder="输入后点击添加，例如：姐弟恋 / 年代剧 / 民国" />
+            </div>
+            <div style="display:flex; align-items:end;">
+              <button class="btn-secondary" id="btnAddCustomTag" style="width:100%;">添加标签</button>
+            </div>
+          </div>
+          <div class="small" style="margin-top:8px;">自定义标签会保存在当前账号，下次同类型会自动出现。</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field" id="reviewDateWrap">
+          <label for="reviewDate">阅读 / 观看日期</label>
+          <input id="reviewDate" type="date" />
+        </div>
+      </div>
+
+      <div class="grid-2 hidden" id="blExtraWrap">
+        <div class="field">
+          <label for="author">作者</label>
+          <input id="author" type="text" placeholder="作者名" />
+        </div>
+        <div class="field">
+          <label for="mainCharacters">主角名</label>
+          <input id="mainCharacters" type="text" placeholder="多个可用顿号或逗号分隔" />
+        </div>
+      </div>
+
+      <div class="field hidden" id="originalIntroWrap">
+        <label for="originalIntroFile">原文介绍（上传图片）</label>
+        <input id="originalIntroFile" type="file" accept="image/*" />
+        <div class="small" id="uploadHint" style="margin-top:8px;">支持 jpg、png、webp。上传前会自动压缩，再保存图片链接。</div>
+        <div id="uploadPreview" style="margin-top:10px;"></div>
+      </div>
+
+      <div class="field">
+        <label for="summary">故事梗概</label>
+        <textarea id="summary" placeholder="记录故事主线、人物关系、看点，不含剧透或可含少量剧透"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="notes">观后感 / 读后感</label>
+        <textarea id="notes" placeholder="写下你的观感、摘抄、推荐理由、角色印象等"></textarea>
+      </div>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="btn-primary" id="btnSave">保存记录</button>
+        <button class="btn-secondary" id="btnCancelSave">取消</button>
+      </div>
+      <div class="status" id="saveState"></div>
+      <div class="small" id="draftState">草稿未保存</div>
+    </div>
+  </dialog>
+
+  <script src="config.js"></script>
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+    const SUPABASE_URL = window.APP_CONFIG?.SUPABASE_URL || '';
+    const SUPABASE_ANON_KEY = window.APP_CONFIG?.SUPABASE_ANON_KEY || '';
+
+    const TYPE_OPTIONS = ['BL小说', '文学小说', '非虚构书籍', '广播剧'];
+
+    const TAG_LIBRARY = {
+      'BL小说': ['修真','种田','无限流','校园','重生','穿书','快穿','星际','ABO','哨向','娱乐圈','破镜重圆','玄幻','灵异','年下','双强','年上','末世'],
+      '文学小说': ['悬疑','推理','严肃文学','女性文学','成长','家庭','历史','社会派'],
+      '非虚构书籍': ['投资','传记','历史','社会学','心理学','商业','纪实','访谈'],
+      '广播剧': ['猫耳','漫播','现代','古风','校园','悬疑','刑侦','ABO']
+    };
+
+    const els = {
+      authScreen: document.getElementById('authScreen'),
+      appScreen: document.getElementById('appScreen'),
+      email: document.getElementById('email'),
+      password: document.getElementById('password'),
+      tabSignIn: document.getElementById('tabSignIn'),
+      tabSignUp: document.getElementById('tabSignUp'),
+      btnAuthMain: document.getElementById('btnAuthMain'),
+      btnAuthToggle: document.getElementById('btnAuthToggle'),
+      authStatus: document.getElementById('authStatus'),
+      globalStatus: document.getElementById('globalStatus'),
+      userEmail: document.getElementById('userEmail'),
+      userEmailInline: document.getElementById('userEmailInline'),
+      btnSignOut: document.getElementById('btnSignOut'),
+      btnReload: document.getElementById('btnReload'),
+      monthFilter: document.getElementById('monthFilter'),
+      btnClearMonthFilter: document.getElementById('btnClearMonthFilter'),
+      statsOverview: document.getElementById('statsOverview'),
+      calendarWrap: document.getElementById('calendarWrap'),
+      calendarHint: document.getElementById('calendarHint'),
+      searchInput: document.getElementById('searchInput'),
+      recordsList: document.getElementById('recordsList'),
+      btnOpenAdd: document.getElementById('btnOpenAdd'),
+      recordDialog: document.getElementById('recordDialog'),
+      btnCloseDialog: document.getElementById('btnCloseDialog'),
+      btnCancelSave: document.getElementById('btnCancelSave'),
+      name: document.getElementById('name'),
+      type: document.getElementById('type'),
+      rating: document.getElementById('rating'),
+      ratingValue: document.getElementById('ratingValue'),
+      tagChips: document.getElementById('tagChips'),
+      customTagInput: document.getElementById('customTagInput'),
+      btnAddCustomTag: document.getElementById('btnAddCustomTag'),
+      notes: document.getElementById('notes'),
+      btnSave: document.getElementById('btnSave'),
+      saveState: document.getElementById('saveState'),
+      reviewDateWrap: document.getElementById('reviewDateWrap'),
+      reviewDate: document.getElementById('reviewDate'),
+      blExtraWrap: document.getElementById('blExtraWrap'),
+      author: document.getElementById('author'),
+      mainCharacters: document.getElementById('mainCharacters'),
+      originalIntroWrap: document.getElementById('originalIntroWrap'),
+      originalIntroFile: document.getElementById('originalIntroFile'),
+      uploadHint: document.getElementById('uploadHint'),
+      uploadPreview: document.getElementById('uploadPreview'),
+      summary: document.getElementById('summary')
+    };
+
+    let supabase = null;
+    let currentUser = null;
+    let allRecords = [];
+    let selectedTags = new Set();
+    let customTagsByType = {};
+    let authMode = 'signin';
+    let editingRecordId = null;
+    let uploadedOriginalIntroUrl = '';
+    let selectedDateFilter = '';
+
+    function setGlobalStatus(text) { els.globalStatus.textContent = text; }
+    function setAuthStatus(text) { els.authStatus.textContent = text; }
+    function setSaveState(text) { els.saveState.textContent = text; }
+    function setDraftState(text) { document.getElementById('draftState').textContent = text; }
+
+    function isConfigured() {
+      return SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_URL.includes('请替换') && !SUPABASE_ANON_KEY.includes('请替换');
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getCustomTagStorageKey() {
+      return currentUser ? `spirit_custom_tags_${currentUser.id}` : 'spirit_custom_tags_guest';
+    }
+
+    function getDraftStorageKey() {
+      return currentUser ? `spirit_form_draft_${currentUser.id}` : 'spirit_form_draft_guest';
+    }
+
+    function loadCustomTags() {
+      try {
+        customTagsByType = JSON.parse(localStorage.getItem(getCustomTagStorageKey()) || '{}');
+      } catch {
+        customTagsByType = {};
+      }
+    }
+
+    function saveCustomTags() {
+      localStorage.setItem(getCustomTagStorageKey(), JSON.stringify(customTagsByType));
+    }
+
+    function initTypeOptions() {
+      els.type.innerHTML = TYPE_OPTIONS.map(type => `<option value="${type}">${type}</option>`).join('');
+    }
+
+    function updateAuthModeUI() {
+      const isSignIn = authMode === 'signin';
+      els.tabSignIn.className = isSignIn ? 'btn-primary auth-tab' : 'btn-secondary auth-tab';
+      els.tabSignUp.className = !isSignIn ? 'btn-primary auth-tab' : 'btn-secondary auth-tab';
+      els.btnAuthMain.textContent = isSignIn ? '登录' : '注册';
+      els.btnAuthToggle.textContent = isSignIn ? '切换到注册' : '切换到登录';
+      setAuthStatus('');
+    }
+
+    function showScreen(screen) {
+      els.authScreen.classList.toggle('hidden', screen !== 'auth');
+      els.appScreen.classList.toggle('hidden', screen !== 'app');
+    }
+
+    function getRatingLabel(rating) {
+      const value = Number(rating);
+      if (value === 10) return '神作';
+      if (value >= 7.5 && value <= 9.5) return '推荐';
+      if (value >= 5.5 && value <= 7) return '普通';
+      if (value >= 2.5 && value <= 5) return '能看';
+      if (value >= 0 && value <= 2) return '难看';
+      return '待评';
+    }
+
+    function updateRatingUI() {
+      const label = getRatingLabel(els.rating.value);
+      els.ratingValue.textContent = `${els.rating.value} / 10 · ${label}`;
+    }
+
+    function getMergedTagsByType(type) {
+      const base = TAG_LIBRARY[type] || [];
+      const custom = customTagsByType[type] || [];
+      return [...new Set([...base, ...custom])];
+    }
+
+    function renderTagChips() {
+      const type = els.type.value;
+      const tags = getMergedTagsByType(type);
+      els.tagChips.innerHTML = tags.map(tag => {
+        const active = selectedTags.has(tag) ? 'active' : '';
+        return `<span class="tag-chip ${active}" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</span>`;
+      }).join('') || '<div class="small">当前类型还没有预设标签，你可以先添加自定义标签。</div>';
+    }
+
+    function updateTypeSpecificFields() {
+      const type = els.type.value;
+      const isBL = type === 'BL小说';
+      els.reviewDateWrap.classList.toggle('hidden', false);
+      els.blExtraWrap.classList.toggle('hidden', !isBL);
+      els.originalIntroWrap.classList.toggle('hidden', !isBL);
+    }
+
+    function resetForm() {
+      editingRecordId = null;
+      els.name.value = '';
+      els.type.value = TYPE_OPTIONS[0];
+      els.rating.value = '8';
+      els.notes.value = '';
+      els.customTagInput.value = '';
+      els.reviewDate.value = '';
+      els.author.value = '';
+      els.mainCharacters.value = '';
+      uploadedOriginalIntroUrl = '';
+      els.originalIntroFile.value = '';
+      els.uploadPreview.innerHTML = '';
+      els.summary.value = '';
+      selectedTags = new Set();
+      updateRatingUI();
+      updateTypeSpecificFields();
+      renderTagChips();
+      setSaveState('');
+      localStorage.removeItem(getDraftStorageKey());
+      setDraftState('草稿未保存');
+    }
+
+    function buildTweet(record) {
+      const emojiMap = { 'BL小说': '📖', '文学小说': '📚', '非虚构书籍': '📝', '广播剧': '🎧' };
+      const emoji = emojiMap[record.type] || '📝';
+      const tagLine = record.tags?.length ? `标签：${record.tags.join('、')}\n` : '';
+      const summary = record.story_summary ? `梗概：${record.story_summary.slice(0, 60)}${record.story_summary.length > 60 ? '...' : ''}\n` : '';
+      const notes = record.notes ? (record.notes.length > 100 ? record.notes.slice(0, 100) + '...' : record.notes) : '';
+      return `${emoji} 【${record.type}】《${record.name}》\n评分：${record.rating}/10\n${tagLine}${summary}${notes}\n#五谷丰登`;
+    }
+
+    function updateUserUI() {
+      const email = currentUser?.email || '-';
+      els.userEmail.textContent = email;
+      els.userEmailInline.textContent = email;
+      if (currentUser?.email) localStorage.setItem('remembered_login_email', currentUser.email);
+    }
+
+    function saveDraft() {
+      const draft = {
+        name: els.name.value,
+        type: String(els.type.value).trim(),
+        rating: els.rating.value,
+        reviewDate: els.reviewDate.value,
+        author: els.author.value,
+        mainCharacters: els.mainCharacters.value,
+        summary: els.summary.value,
+        notes: els.notes.value,
+        selectedTags: [...selectedTags],
+        uploadedOriginalIntroUrl
+      };
+      localStorage.setItem(getDraftStorageKey(), JSON.stringify(draft));
+      setDraftState('草稿已自动保存');
+    }
+
+    function loadDraft() {
+      try {
+        const rememberedEmail = localStorage.getItem('remembered_login_email');
+        if (rememberedEmail && !els.email.value) els.email.value = rememberedEmail;
+        const raw = localStorage.getItem(getDraftStorageKey());
+        if (!raw) return;
+        const draft = JSON.parse(raw);
+        els.name.value = draft.name || '';
+        els.type.value = draft.type || TYPE_OPTIONS[0];
+        els.rating.value = draft.rating || '8';
+        els.reviewDate.value = draft.reviewDate || '';
+        els.author.value = draft.author || '';
+        els.mainCharacters.value = draft.mainCharacters || '';
+        els.summary.value = draft.summary || '';
+        els.notes.value = draft.notes || '';
+        selectedTags = new Set(draft.selectedTags || []);
+        uploadedOriginalIntroUrl = draft.uploadedOriginalIntroUrl || '';
+        if (uploadedOriginalIntroUrl) {
+          els.uploadPreview.innerHTML = `<img src="${escapeHtml(uploadedOriginalIntroUrl)}" alt="预览" style="max-width:100%; border-radius:12px; border:1px solid #ecdada;" />`;
+          els.uploadHint.textContent = '已恢复上次草稿图片';
+        }
+        updateRatingUI();
+        updateTypeSpecificFields();
+        renderTagChips();
+        setDraftState('已恢复上次草稿');
+      } catch {
+        setDraftState('草稿恢复失败');
+      }
+    }
+
+    function markDraftDirty() {
+      setDraftState('草稿待保存');
+    }
+
+    function renderStatsOverview() {
+      const summaryEl = els.statsOverview;
+      const counter = {};
+      allRecords.forEach(r => {
+        const key = r.type || '未分类';
+        counter[key] = (counter[key] || 0) + 1;
+      });
+      const entries = Object.entries(counter).sort((a, b) => b[1] - a[1]);
+      if (!allRecords.length) {
+        summaryEl.className = 'empty';
+        summaryEl.textContent = '还没有记录统计。';
+        return;
+      }
+      summaryEl.className = '';
+      summaryEl.innerHTML = `
+        <div class="stats-total">
+          <div class="stats-total-label">总记录数</div>
+          <div class="stats-total-value">${allRecords.length}</div>
+        </div>
+        <div class="summary-grid">
+          ${entries.map(([type, count]) => `
+            <div class="summary-card" data-typefilter="${escapeHtml(type)}">
+              <div class="summary-name">${escapeHtml(type)}</div>
+              <div class="summary-count">${count}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function getRecordMonthKey(record) {
+      const rawDate = record.review_date || record.created_at;
+      if (!rawDate) return '';
+      const d = new Date(rawDate);
+      if (Number.isNaN(d.getTime())) return '';
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function getRecordDateKey(record) {
+      const rawDate = record.review_date || record.created_at;
+      if (!rawDate) return '';
+      const d = new Date(rawDate);
+      if (Number.isNaN(d.getTime())) return '';
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function renderCalendar() {
+      const wrap = els.calendarWrap;
+      const monthValue = els.monthFilter.value || (() => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      })();
+      if (!els.monthFilter.value) els.monthFilter.value = monthValue;
+
+      const [yearStr, monthStr] = monthValue.split('-');
+      const year = Number(yearStr);
+      const month = Number(monthStr);
+      const firstDay = new Date(year, month - 1, 1);
+      const lastDate = new Date(year, month, 0).getDate();
+      const startWeekday = (firstDay.getDay() + 6) % 7;
+
+      const dateCounter = {};
+      allRecords.forEach(r => {
+        const key = getRecordDateKey(r);
+        if (!key.startsWith(monthValue)) return;
+        dateCounter[key] = (dateCounter[key] || 0) + 1;
+      });
+
+      const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
+      let html = `<div class="calendar-grid">${weekdays.map(d => `<div class="calendar-weekday">${d}</div>`).join('')}`;
+      for (let i = 0; i < startWeekday; i++) html += `<div class="calendar-day empty"></div>`;
+      for (let day = 1; day <= lastDate; day++) {
+        const key = `${monthValue}-${String(day).padStart(2, '0')}`;
+        const hasRecord = !!dateCounter[key];
+        const selected = selectedDateFilter === key;
+        html += `<div class="calendar-day ${hasRecord ? 'has-record' : ''} ${selected ? 'selected' : ''}" data-datefilter="${key}">${day}${hasRecord ? '<span class="calendar-dot"></span>' : ''}</div>`;
+      }
+      html += `</div>`;
+      wrap.innerHTML = html;
+      els.calendarHint.textContent = selectedDateFilter ? `当前按 ${selectedDateFilter} 筛选` : '有记录的日期会高亮，点日期可筛选下方列表。';
+    }
+
+    function renderRecords() {
+      const keyword = els.searchInput.value.trim().toLowerCase();
+      const typeFilter = els.searchInput.dataset.typefilter || '';
+      const filtered = allRecords.filter(r => {
+        if (selectedDateFilter && getRecordDateKey(r) !== selectedDateFilter) return false;
+        if (typeFilter && r.type !== typeFilter) return false;
+        if (!keyword) return true;
+        const haystack = [r.name, r.type, ...(r.tags || []), r.notes || '', r.author || '', r.main_characters || ''].join(' ').toLowerCase();
+        return haystack.includes(keyword);
+      });
+
+      if (!filtered.length) {
+        els.recordsList.className = 'empty';
+        if (selectedDateFilter) {
+          els.recordsList.textContent = '该日期没有记录。';
+        } else if (keyword || typeFilter) {
+          els.recordsList.textContent = '当前筛选下没有记录。';
+        } else {
+          els.recordsList.textContent = allRecords.length ? '当前筛选下没有记录。' : '还没有记录，点右下角 + 添加第一条。';
+        }
+        return;
+      }
+
+      els.recordsList.className = '';
+      els.recordsList.innerHTML = filtered.map(record => {
+        const displayDate = new Date(record.review_date || record.created_at).toLocaleDateString('zh-CN');
+        const ratingLabel = getRatingLabel(record.rating);
+        const coverBlock = record.cover_url
+          ? `<img src="${escapeHtml(record.cover_url)}" alt="封面" style="width:72px;height:108px;object-fit:cover;border-radius:12px;border:1px solid #ecdada;flex-shrink:0;" />`
+          : `<div style="width:72px;height:108px;border-radius:12px;border:1px solid #ecdada;background:#fff7f7;display:flex;align-items:center;justify-content:center;color:#a27878;font-size:12px;flex-shrink:0;">无图</div>`;
+        return `
+          <div class="record-item">
+            <div style="display:flex; gap:12px; align-items:flex-start;">
+              ${coverBlock}
+              <div style="flex:1; min-width:0;">
+                <div class="small">${escapeHtml(displayDate)}</div>
+                <div style="font-size:17px; font-weight:700; color:#8c5e58; margin:4px 0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(record.name)}</div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
+                  <span class="tag">${escapeHtml(record.type)}</span>
+                  <span class="tag">${escapeHtml(record.rating)} 分</span>
+                  <span class="tag">${escapeHtml(ratingLabel)}</span>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                  <button class="btn-secondary" data-copy="${record.id}">复制</button>
+                  <button class="btn-secondary" data-edit="${record.id}">编辑</button>
+                  <button class="btn-danger" data-delete="${record.id}">删除</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function signUp() {
+      const email = els.email.value.trim();
+      const password = els.password.value;
+      if (!email || !password) return alert('请填写邮箱和密码');
+      setAuthStatus('正在注册…');
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        setAuthStatus('注册失败');
+        alert(error.message);
+        return;
+      }
+      setAuthStatus('注册成功，请直接登录。');
+      authMode = 'signin';
+      updateAuthModeUI();
+    }
+
+    async function signIn() {
+      const email = els.email.value.trim();
+      const password = els.password.value;
+      if (!email || !password) return alert('请填写邮箱和密码');
+      try {
+        setAuthStatus('正在登录…');
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          setAuthStatus('登录失败');
+          alert(error.message);
+          return;
+        }
+        if (!data?.session || !data?.user) {
+          setAuthStatus('登录未完成，请重试');
+          return;
+        }
+        currentUser = data.user;
+        loadCustomTags();
+        updateUserUI();
+        showScreen('app');
+        loadDraft();
+        await fetchRecords();
+        setAuthStatus('登录成功');
+      } catch (err) {
+        setAuthStatus('登录异常');
+        alert(err?.message || '登录时发生异常');
+      }
+    }
+
+    async function signOut() {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        alert(error.message);
+        return;
+      }
+      currentUser = null;
+      allRecords = [];
+      selectedDateFilter = '';
+      showScreen('auth');
+      renderRecords();
+    }
+
+    async function compressImage(file, maxWidth = 1600, quality = 0.82) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            let { width, height } = img;
+            if (width > maxWidth) {
+              height = Math.round(height * (maxWidth / width));
+              width = maxWidth;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            canvas.toBlob((blob) => {
+              if (!blob) return reject(new Error('图片压缩失败'));
+              resolve(new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }));
+            }, 'image/jpeg', quality);
+          };
+          img.onerror = () => reject(new Error('图片读取失败'));
+          img.src = reader.result;
+        };
+        reader.onerror = () => reject(new Error('图片读取失败'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function formatSize(bytes) {
+      if (!bytes && bytes !== 0) return '-';
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+      return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+    }
+
+    async function uploadOriginalIntroImage(file) {
+      if (!currentUser) return alert('请先登录');
+      if (!file) return;
+      const DIRECT_LIMIT = 500 * 1024;
+      let uploadFile = file;
+      try {
+        els.originalIntroFile.disabled = true;
+        if (file.size <= DIRECT_LIMIT) {
+          els.uploadHint.textContent = `图片 ${formatSize(file.size)}，直接上传…`;
+        } else {
+          els.uploadHint.textContent = `原图 ${formatSize(file.size)}，正在压缩…`;
+          uploadFile = await compressImage(file);
+          els.uploadHint.textContent = `压缩后 ${formatSize(uploadFile.size)}，正在上传…`;
+        }
+        const filePath = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+        const { error } = await supabase.storage.from('covers').upload(filePath, uploadFile, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: 'image/jpeg'
+        });
+        if (error) {
+          els.uploadHint.textContent = '上传失败';
+          alert(error.message);
+          return;
+        }
+        const { data } = supabase.storage.from('covers').getPublicUrl(filePath);
+        uploadedOriginalIntroUrl = data.publicUrl;
+        els.uploadHint.textContent = `上传成功：${formatSize(uploadFile.size)}`;
+        els.uploadPreview.innerHTML = `<img src="${escapeHtml(uploadedOriginalIntroUrl)}" alt="预览" style="max-width:100%; border-radius:12px; border:1px solid #ecdada;" />`;
+      } catch (err) {
+        els.uploadHint.textContent = '处理失败';
+        alert(err?.message || '图片处理失败');
+      } finally {
+        els.originalIntroFile.disabled = false;
+      }
+    }
+
+    async function fetchRecords() {
+      if (!currentUser) return;
+      setGlobalStatus('正在加载记录…');
+      const { data, error } = await supabase.from('spirit_records').select('*').order('created_at', { ascending: false });
+      if (error) {
+        setGlobalStatus('加载失败');
+        alert(error.message);
+        return;
+      }
+      allRecords = data || [];
+      renderRecords();
+      renderStatsOverview();
+      renderCalendar();
+      setGlobalStatus(`已加载 ${allRecords.length} 条记录`);
+    }
+
+    async function saveRecord() {
+      if (!currentUser) return alert('请先登录');
+      const saveBtn = els.btnSave;
+      const cancelBtn = els.btnCancelSave;
+      saveBtn.disabled = true;
+      cancelBtn.disabled = true;
+      try {
+        const payload = {
+          user_id: currentUser.id,
+          name: els.name.value.trim(),
+          type: String(els.type.value).trim(),
+          rating: Number(els.rating.value),
+          tags: [...selectedTags],
+          notes: els.notes.value.trim(),
+          review_date: els.reviewDate.value || null,
+          author: (els.author.value || '').trim(),
+          main_characters: (els.mainCharacters.value || '').trim(),
+          intro: '',
+          cover_url: uploadedOriginalIntroUrl || '',
+          story_summary: (els.summary.value || '').trim()
+        };
+        if (!payload.name) return alert('请填写名称');
+        if (!payload.type) return alert('请选择类型');
+        if (Number.isNaN(payload.rating)) return alert('评分不能为空');
+        setSaveState(editingRecordId ? '正在更新…' : '正在保存到云端…');
+        const op = editingRecordId
+          ? supabase.from('spirit_records').update(payload).eq('id', editingRecordId).eq('user_id', currentUser.id)
+          : supabase.from('spirit_records').insert(payload);
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('请求超时，请稍后重试')), 12000));
+        const resp = await Promise.race([op, timeoutPromise]);
+        const error = resp?.error || null;
+        if (error) {
+          setSaveState('保存失败');
+          alert(`保存失败：${error.message}`);
+          return;
+        }
+        setSaveState(editingRecordId ? '更新成功' : '保存成功');
+        els.recordDialog.close();
+        resetForm();
+        setGlobalStatus('保存成功，正在刷新列表…');
+        await fetchRecords();
+      } catch (err) {
+        setSaveState('保存异常');
+        alert(`保存异常：${err?.message || '未知错误'}`);
+      } finally {
+        saveBtn.disabled = false;
+        cancelBtn.disabled = false;
+      }
+    }
+
+    async function deleteRecord(id) {
+      if (!confirm('确认删除这条记录吗？')) return;
+      const { error } = await supabase.from('spirit_records').delete().eq('id', id).eq('user_id', currentUser.id);
+      if (error) {
+        alert(error.message);
+        return;
+      }
+      await fetchRecords();
+    }
+
+    function openEditRecord(id) {
+      const record = allRecords.find(r => String(r.id) === String(id));
+      if (!record) return;
+      editingRecordId = record.id;
+      els.name.value = record.name || '';
+      els.type.value = TYPE_OPTIONS.includes(record.type) ? record.type : TYPE_OPTIONS[0];
+      els.rating.value = String(record.rating ?? 8);
+      els.reviewDate.value = record.review_date || '';
+      els.author.value = record.author || '';
+      els.mainCharacters.value = record.main_characters || '';
+      els.summary.value = record.story_summary || '';
+      els.notes.value = record.notes || '';
+      selectedTags = new Set(record.tags || []);
+      uploadedOriginalIntroUrl = record.cover_url || '';
+      if (uploadedOriginalIntroUrl) {
+        els.uploadPreview.innerHTML = `<img src="${escapeHtml(uploadedOriginalIntroUrl)}" alt="预览" style="max-width:100%; border-radius:12px; border:1px solid #ecdada;" />`;
+        els.uploadHint.textContent = '已载入原图';
+      } else {
+        els.uploadPreview.innerHTML = '';
+        els.uploadHint.textContent = '支持 jpg、png、webp。上传前会自动压缩，再保存图片链接。';
+      }
+      updateRatingUI();
+      updateTypeSpecificFields();
+      renderTagChips();
+      setSaveState('当前为编辑模式');
+      setDraftState('编辑模式');
+      const titleEl = document.querySelector('#recordDialog h2');
+      if (titleEl) titleEl.textContent = '编辑记录';
+      els.recordDialog.showModal();
+    }
+
+    async function copyTweetById(id) {
+      const record = allRecords.find(r => r.id === id);
+      if (!record) return;
+      await navigator.clipboard.writeText(buildTweet(record));
+      alert('复制成功');
+    }
+
+    function addCustomTag() {
+      const type = els.type.value;
+      const tag = els.customTagInput.value.trim();
+      if (!tag) return;
+      customTagsByType[type] = customTagsByType[type] || [];
+      if (!customTagsByType[type].includes(tag)) {
+        customTagsByType[type].push(tag);
+        saveCustomTags();
+      }
+      selectedTags.add(tag);
+      els.customTagInput.value = '';
+      renderTagChips();
+    }
+
+    async function bootstrap() {
+      initTypeOptions();
+      updateRatingUI();
+      resetForm();
+      updateAuthModeUI();
+      if (!isConfigured()) {
+        setAuthStatus('请先在代码中填入 Supabase URL 和 publishable key');
+        return;
+      }
+      supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const { data: { session } } = await supabase.auth.getSession();
+      currentUser = session?.user ?? null;
+      supabase.auth.onAuthStateChange(async (_event, session) => {
+        currentUser = session?.user ?? null;
+        if (currentUser) {
+          loadCustomTags();
+          updateUserUI();
+          showScreen('app');
+          loadDraft();
+          await fetchRecords();
+        } else {
+          showScreen('auth');
+          updateUserUI();
+        }
+      });
+      if (currentUser) {
+        loadCustomTags();
+        updateUserUI();
+        showScreen('app');
+        loadDraft();
+        await fetchRecords();
+      } else {
+        showScreen('auth');
+        const rememberedEmail = localStorage.getItem('remembered_login_email');
+        if (rememberedEmail) els.email.value = rememberedEmail;
+        setAuthStatus('请输入邮箱和密码。');
+      }
+    }
+
+    els.tabSignIn.addEventListener('click', () => { authMode = 'signin'; updateAuthModeUI(); });
+    els.tabSignUp.addEventListener('click', () => { authMode = 'signup'; updateAuthModeUI(); });
+    els.btnAuthToggle.addEventListener('click', () => {
+      authMode = authMode === 'signin' ? 'signup' : 'signin';
+      updateAuthModeUI();
+    });
+    els.btnAuthMain.addEventListener('click', () => authMode === 'signin' ? signIn() : signUp());
+    els.btnSignOut.addEventListener('click', signOut);
+    els.btnReload.addEventListener('click', fetchRecords);
+    els.searchInput.addEventListener('input', renderRecords);
+    els.monthFilter.addEventListener('change', () => {
+      selectedDateFilter = '';
+      renderCalendar();
+      renderRecords();
+    });
+    els.btnClearMonthFilter.addEventListener('click', () => {
+      selectedDateFilter = '';
+      els.monthFilter.value = '';
+      els.searchInput.dataset.typefilter = '';
+      els.searchInput.placeholder = '搜索名称 / 标签 / 笔记';
+      renderCalendar();
+      renderRecords();
+    });
+    els.btnOpenAdd.addEventListener('click', () => {
+      resetForm();
+      const titleEl = document.querySelector('#recordDialog h2');
+      if (titleEl) titleEl.textContent = '新增记录';
+      els.recordDialog.showModal();
+    });
+    els.btnCloseDialog.addEventListener('click', () => els.recordDialog.close());
+    els.btnCancelSave.addEventListener('click', () => els.recordDialog.close());
+    els.rating.addEventListener('input', () => { updateRatingUI(); markDraftDirty(); saveDraft(); });
+    els.type.addEventListener('change', () => { selectedTags = new Set(); updateTypeSpecificFields(); renderTagChips(); markDraftDirty(); saveDraft(); });
+    els.btnAddCustomTag.addEventListener('click', () => { addCustomTag(); markDraftDirty(); saveDraft(); });
+    els.btnSave.addEventListener('click', saveRecord);
+    els.originalIntroFile.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (file) await uploadOriginalIntroImage(file);
+    });
+
+    document.addEventListener('click', async (e) => {
+      const tag = e.target?.dataset?.tag;
+      const copyId = e.target?.dataset?.copy;
+      const deleteId = e.target?.dataset?.delete;
+      const editId = e.target?.dataset?.edit;
+      const typeFilter = e.target?.dataset?.typefilter;
+      const dateFilter = e.target?.dataset?.datefilter;
+
+      if (tag) {
+        if (selectedTags.has(tag)) selectedTags.delete(tag); else selectedTags.add(tag);
+        renderTagChips();
+        markDraftDirty();
+        saveDraft();
+      }
+      if (typeFilter) {
+        els.searchInput.dataset.typefilter = typeFilter;
+        els.searchInput.placeholder = `当前筛选：${typeFilter}`;
+        renderRecords();
+      }
+      if (dateFilter) {
+        selectedDateFilter = selectedDateFilter === dateFilter ? '' : dateFilter;
+        renderCalendar();
+        renderRecords();
+      }
+      if (copyId) await copyTweetById(copyId);
+      if (editId) openEditRecord(editId);
+      if (deleteId) await deleteRecord(deleteId);
+    });
+
+    ['name','reviewDate','author','mainCharacters','summary','notes'].forEach(key => {
+      const el = els[key];
+      if (!el) return;
+      el.addEventListener('input', () => {
+        markDraftDirty();
+        saveDraft();
+      });
+    });
+
+    bootstrap();
+  </script>
+</body>
+</html>
