@@ -1386,7 +1386,7 @@
   async function saveRecord() {
     if (!currentUser) return;
     els.btnSave.disabled = true;
-    setSaveState('保存中…');
+    setSaveState(editingRecordId ? '更新中…' : '保存中…');
     try {
       const payload = {
         name: els.name.value.trim(),
@@ -1412,11 +1412,12 @@
         ({ error } = await supabase.from('spirit_records')
           .insert({ ...payload, user_id: currentUser.id }));
       }
-      if (error) { setSaveState('失败：' + error.message); alert(error.message); return; }
+      if (error) { setSaveState('保存失败：' + error.message); alert(error.message); return; }
       setSaveState('✓ 保存成功');
       els.recordDialog.close();
       resetForm();
       localStorage.removeItem(getDraftKey());
+      allRecords = [];
       await fetchRecords();
     } catch(e) {
       setSaveState('保存异常');
