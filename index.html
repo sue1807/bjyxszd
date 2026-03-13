@@ -2,8 +2,10 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>五谷丰登</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn" crossorigin />
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #f7f3ee;
@@ -23,10 +25,12 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-weight: 300;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
+      -webkit-text-size-adjust: 100%;
     }
 
     .hidden { display: none !important; }
@@ -458,8 +462,8 @@
     .record-row-main { flex: 1; min-width: 0; }
 
     .record-row-title {
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 15px;
+      font-weight: 400;
       color: var(--accent-deep);
       margin-bottom: 2px;
       display: flex;
@@ -545,15 +549,15 @@
       padding: 12px 16px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       border-bottom: 1px solid #f5eeeb;
     }
 
     .list-head-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--muted);
-      letter-spacing: 0.8px;
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--accent-deep);
+      letter-spacing: 1px;
     }
 
     .filter-pill {
@@ -887,6 +891,19 @@
     }
 
     /* ─── RESPONSIVE ───────────────────────── */
+    /* Safe area for notch phones */
+    .app-header {
+      padding-top: env(safe-area-inset-top);
+    }
+    .fab {
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      right: calc(20px + env(safe-area-inset-right));
+    }
+
+    /* Minimum touch target size */
+    .btn-sm { min-height: 32px; }
+    button { min-height: 36px; }
+
     @media (max-width: 560px) {
       .dashboard-row { grid-template-columns: 1fr 1fr; gap: 8px; }
       .records-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
@@ -898,6 +915,12 @@
 
     @media (max-width: 380px) {
       .records-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  }
+    @media (hover: none) {
+      .stat-row:hover { background: initial; }
+      .record-row:hover { background: initial; }
+      .cal-day:hover { background: initial; }
     }
   </style>
 </head>
