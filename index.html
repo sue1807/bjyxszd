@@ -68,7 +68,7 @@
     }
 
     .auth-logo p {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--muted);
       margin-top: 4px;
     }
@@ -293,24 +293,18 @@
       overflow: hidden;
     }
 
-    .panel-head {
-      padding: 10px 12px 6px;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--muted);
-      letter-spacing: 0.8px;
-    }
+    .panel-head { display: none; }
 
     /* Stats */
-    .stats-body { padding: 4px 10px 10px; }
+    .stats-body { padding: 0 10px 8px; }
 
     .stat-kpi-row {
       display: flex;
-      justify-content: space-between;
+      justify-content: space-around;
       gap: 0;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       border-bottom: 1px solid var(--line);
-      padding-bottom: 10px;
+      padding: 10px 0 10px;
     }
 
     .stat-kpi {
@@ -318,7 +312,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
+      gap: 2px;
     }
 
     .stat-kpi + .stat-kpi {
@@ -326,14 +320,14 @@
     }
 
     .stat-kpi-num {
-      font-size: 20px;
+      font-size: 16px;
       font-weight: 800;
       color: var(--accent-deep);
-      line-height: 1.1;
+      line-height: 1.2;
     }
 
     .stat-kpi-label {
-      font-size: 10px;
+      font-size: 9px;
       color: var(--muted);
       letter-spacing: 0.3px;
       text-align: center;
@@ -354,18 +348,18 @@
     .stat-row:hover { background: var(--accent-light); }
 
     .stat-row-name {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--muted);
     }
 
     .stat-row-count {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--accent);
     }
 
     /* Calendar */
-    .cal-body { padding: 4px 8px 8px; }
+    .cal-body { padding: 8px 8px 8px; }
 
     .cal-nav {
       display: flex;
@@ -966,7 +960,7 @@
     <div class="dashboard-row">
       <!-- Stats -->
       <div class="panel">
-        <div class="panel-head">统计</div>
+
         <div class="stats-body" id="statsOverview">
           <div style="color:var(--muted); font-size:13px; padding:12px 0;">加载中…</div>
         </div>
@@ -974,7 +968,7 @@
 
       <!-- Calendar -->
       <div class="panel">
-        <div class="panel-head">日期浏览</div>
+
         <div class="cal-body">
           <div class="cal-nav">
             <button class="cal-nav-btn" id="calPrev">‹</button>
@@ -1410,7 +1404,7 @@
   async function fetchRecords() {
     if (!currentUser) return;
     setGlobal('加载中…');
-    const { data, error } = await supabase.from('spirit_records').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('spirit_records').select('*').order('review_date', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false });
     if (error) { setGlobal('加载失败'); return; }
     allRecords = data || [];
     renderStats(); renderCalendar(); renderRecords();
