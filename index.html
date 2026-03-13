@@ -1249,7 +1249,7 @@
     viewDialog: $('viewDialog'), btnCloseView: $('btnCloseView'),
     recordDialog: $('recordDialog'), btnCloseDialog: $('btnCloseDialog'),
     btnCancelSave: $('btnCancelSave'), dialogTitle: $('dialogTitle'),
-    name: $('name'), type: $('type'), rating: $('rating'), ratingValue: $('ratingValue'),
+    name: $('name'), type: $('type'), rating: $('rating'),
     tagChips: $('tagChips'), customTagInput: $('customTagInput'), btnAddCustomTag: $('btnAddCustomTag'),
     notes: $('notes'), btnSave: $('btnSave'), saveState: $('saveState'),
     reviewDate: $('reviewDate'),
@@ -1362,9 +1362,7 @@
     setAuthStatus('');
   }
 
-  function updateRatingUI() {
-    els.ratingValue.textContent = `${els.rating.value} / 10 · ${getRatingLabel(els.rating.value)}`;
-  }
+  function updateRatingUI() { /* slider removed, no-op */ }
 
   function updateTypeFields() {
     const isBL = els.type.value === 'BL小说';
@@ -1879,7 +1877,7 @@
     await deleteRecord(editingRecordId);
   });
   els.btnSave.addEventListener('click', saveRecord);
-  els.rating.addEventListener('input', () => { updateRatingUI(); saveDraft(); });
+
   els.type.addEventListener('change', () => { selectedTags = new Set(); updateTypeFields(); renderTagChips(); saveDraft(); });
   document.addEventListener('click', e => {
     const t = e.target;
