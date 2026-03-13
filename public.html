@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>公共书架 · 五谷丰登</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn" crossorigin />
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f7f3ee; --card: #ffffff; --text: #3d2f2d; --muted: #a08880;
+      --line: #ead8d0; --accent: #c9847a; --accent-light: #f2d0cc;
+      --accent-deep: #b06b62; --soft: #fdf7f5;
+      --shadow: 0 4px 16px rgba(140,90,80,0.09); --radius: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif; font-weight: 300; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .app-header { position: sticky; top: 0; z-index: 100; background: rgba(247,243,238,0.88); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(234,216,208,0.6); }
+    .header-inner { max-width: 860px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .brand-name { font-size: 19px; font-weight: 400; color: var(--accent-deep); letter-spacing: 1px; }
+    .back-btn { font-size: 12px; color: var(--muted); background: #f5eeeb; border-radius: 20px; padding: 5px 10px; text-decoration: none; }
+    .container { max-width: 860px; margin: 0 auto; padding: 14px 16px 80px; }
+    .search-wrap { position: relative; margin-bottom: 14px; }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+    #searchInput { width: 100%; padding: 11px 14px 11px 40px; font-size: 12px; font-family: inherit; background: #fff; border-radius: 14px; border: 1.5px solid var(--line); box-shadow: var(--shadow); outline: none; color: var(--text); }
+    .global-status { font-size: 11px; color: var(--muted); text-align: center; margin-bottom: 12px; }
+    .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .filter-chip { padding: 4px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; border: none; background: #f5eeeb; color: var(--muted); transition: .15s; font-family: inherit; }
+    .filter-chip.active { background: var(--accent); color: #fff; }
+    .list-panel { background: #fff; border-radius: var(--radius); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .list-head { padding: 10px 16px; background: linear-gradient(135deg, #fdf0ec, #f8e8e4); border-bottom: 1px solid var(--line); border-radius: var(--radius) var(--radius) 0 0; }
+    .list-head-title { font-size: 16px; font-weight: 400; color: var(--accent-deep); letter-spacing: 1px; }
+    .record-row { padding: 6px 12px; border-bottom: 1px solid #f5eeeb; }
+    .record-row:last-child { border-bottom: none; }
+    .record-row-title { font-size: 15px; font-weight: 400; color: var(--accent-deep); margin-bottom: 2px; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px; }
+    .record-sub { font-size: 11px; color: var(--muted); margin-left: 4px; }
+    .record-row-line2 { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 3px 0; }
+    .meta-tag { font-size: 11px; padding: 2px 7px; border-radius: 20px; background: #f5eeeb; color: #b89890; }
+    .meta-rating { font-size: 11px; font-weight: 600; color: var(--accent); }
+    .record-row-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+    .nickname-badge { font-size: 10px; color: var(--muted); background: #fdf0ec; padding: 2px 7px; border-radius: 20px; }
+    .empty-state { padding: 48px 20px; text-align: center; color: var(--muted); }
+    .pagination { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-top: 1px solid #f5eeeb; }
+    .page-btn { padding: 5px 12px; border-radius: 8px; background: #f5eeeb; color: var(--accent-deep); font-size: 12px; border: none; cursor: pointer; font-family: inherit; }
+    .page-btn:disabled { opacity: 0.35; cursor: default; }
+    .page-info { font-size: 11px; color: var(--muted); }
+    .auth-gate { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--muted); font-size: 14px; }
+    .auth-gate a { color: var(--accent-deep); text-decoration: none; background: var(--accent-light); padding: 8px 20px; border-radius: 12px; }
+  </style>
+</head>
+<body>
+<header class="app-header">
+  <div class="header-inner">
+    <div class="brand"><span style="font-size:22px;">📚</span> <span class="brand-name">公共书架</span></div>
+    <a href="index.html" class="back-btn">← 我的书架</a>
+  </div>
+</header>
+<div class="container">
+  <div id="authGate" class="auth-gate" style="display:none;">
+    <div>请先登录后查看公共书架</div>
+    <a href="index.html">去登录</a>
+  </div>
+  <div id="mainContent" style="display:none;">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input id="searchInput" type="text" placeholder="搜索书名、标签、作者…" />
+    </div>
+    <div class="global-status" id="globalStatus"></div>
+    <div class="filter-row" id="filterRow"></div>
+    <div class="list-panel">
+      <div class="list-head"><span class="list-head-title">公共书架</span></div>
+      <div id="recordsList"></div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+  const SUPABASE_URL = window.APP_CONFIG?.SUPABASE_URL || '';
+  const SUPABASE_ANON_KEY = window.APP_CONFIG?.SUPABASE_ANON_KEY || '';
+  const TYPE_ICONS = { 'BL小说': '🌙', '文学小说': '📖', '非虚构书籍': '📝', '广播剧': '🎧' };
+  const PAGE_SIZE = 20;
+  let supabase, allRecords = [], profiles = {}, currentPage = 1, activeType = '';
+
+  function esc(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function getRatingLabel(r) {
+    const v = Number(r);
+    if (v===10) return '神作'; if (v>=7.5) return '推荐'; if (v>=5.5) return '普通'; if (v>=2.5) return '能看'; return '难看';
+  }
+
+  async function init() {
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { document.getElementById('authGate').style.display = 'flex'; return; }
+    document.getElementById('mainContent').style.display = 'block';
+    await loadData();
+  }
+
+  async function loadData() {
+    document.getElementById('globalStatus').textContent = '加载中…';
+    const [recRes, profRes] = await Promise.all([
+      supabase.from('spirit_records').select('id,name,type,rating,tags,author,review_date,user_id').eq('is_public', true).order('review_date', {ascending:false,nullsFirst:false}).order('created_at',{ascending:false}),
+      supabase.from('profiles').select('id,nickname')
+    ]);
+    allRecords = recRes.data || [];
+    (profRes.data||[]).forEach(p => profiles[p.id] = p.nickname);
+    renderFilters(); renderRecords();
+    document.getElementById('globalStatus').textContent = '共 ' + allRecords.length + ' 条公开记录';
+  }
+
+  function renderFilters() {
+    const types = [...new Set(allRecords.map(r=>r.type).filter(Boolean))];
+    document.getElementById('filterRow').innerHTML = ['全部',...types].map(t =>
+      '<button class="filter-chip ' + ((!activeType&&t==='全部')||activeType===t?'active':'') + '" data-type="' + (t==='全部'?'':t) + '">' + (t==='全部'?'全部':(TYPE_ICONS[t]||'')+' '+t) + '</button>'
+    ).join('');
+  }
+
+  function renderRecords() {
+    const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+    const filtered = allRecords.filter(r => {
+      if (activeType && r.type !== activeType) return false;
+      if (!keyword) return true;
+      return [r.name,...(r.tags||[]),r.author||''].join(' ').toLowerCase().includes(keyword);
+    });
+    const totalPages = Math.ceil(filtered.length/PAGE_SIZE)||1;
+    if (currentPage>totalPages) currentPage=totalPages;
+    const paged = filtered.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
+    if (!paged.length) { document.getElementById('recordsList').innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:10px;">📚</div><div>暂无公开记录</div></div>'; return; }
+    const pagination = totalPages>1 ? '<div class="pagination"><button class="page-btn" id="pagePrev"'+(currentPage<=1?' disabled':'')+'>‹ 上一页</button><span class="page-info">'+currentPage+' / '+totalPages+'</span><button class="page-btn" id="pageNext"'+(currentPage>=totalPages?' disabled':'')+'>下一页 ›</button></div>' : '';
+    document.getElementById('recordsList').innerHTML = paged.map(r => {
+      const icon = TYPE_ICONS[r.type]||'📌';
+      const tagsHtml = (r.tags||[]).map(t=>'<span class="meta-tag">'+esc(t)+'</span>').join('');
+      const nick = profiles[r.user_id] ? '<span class="nickname-badge">'+esc(profiles[r.user_id])+'</span>' : '';
+      return '<div class="record-row"><div class="record-row-title">'+icon+' '+esc(r.name)+(r.author?'<span class="record-sub">'+esc(r.author)+'</span>':'')+nick+'</div><div class="record-row-line2"><span class="meta-rating">★ '+r.rating+' · '+getRatingLabel(r.rating)+'</span>'+(r.review_date?'<span class="meta-tag">📅 '+r.review_date+'</span>':'')+'</div>'+(tagsHtml?'<div class="record-row-tags">'+tagsHtml+'</div>':'')+'</div>';
+    }).join('') + pagination;
+    document.getElementById('pagePrev')?.addEventListener('click', ()=>{ currentPage--; renderRecords(); window.scrollTo(0,0); });
+    document.getElementById('pageNext')?.addEventListener('click', ()=>{ currentPage++; renderRecords(); window.scrollTo(0,0); });
+  }
+
+  document.getElementById('searchInput').addEventListener('input', ()=>{ currentPage=1; renderRecords(); });
+  document.getElementById('filterRow').addEventListener('click', e => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    activeType = chip.dataset.type; currentPage = 1;
+    renderFilters(); renderRecords();
+  });
+  init();
+</script>
+</body>
+</html>

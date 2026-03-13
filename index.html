@@ -452,7 +452,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 9px 12px;
+      padding: 6px 12px;
       border-bottom: 1px solid #f5eeeb;
       transition: background .15s;
     }
@@ -863,6 +863,52 @@
       font-weight: 700;
     }
 
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid #f5eeeb;
+    }
+    .page-btn {
+      min-width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 8px;
+    }
+    .page-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .page-btn:disabled { opacity: 0.4; cursor: default; }
+
+    /* ─── PAGINATION */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid #f5eeeb;
+    }
+    .page-btn {
+      padding: 5px 12px;
+      border-radius: 8px;
+      background: #f5eeeb;
+      color: var(--accent-deep);
+      font-size: 12px;
+      border: none;
+      cursor: pointer;
+    }
+    .page-btn:disabled { opacity: 0.35; cursor: default; }
+    .page-info { font-size: 11px; color: var(--muted); }
+
     /* ─── STAR RATING ──────────────────────── */
     .star-rating-wrap {
       display: flex;
@@ -1021,6 +1067,10 @@
       <label for="email">邮箱</label>
       <input id="email" type="email" placeholder="请输入邮箱" autocomplete="username" />
     </div>
+    <div class="field" id="nicknameField" style="display:none;">
+      <label for="nickname">昵称</label>
+      <input id="nickname" type="text" placeholder="给自己起个名字" />
+    </div>
     <div class="field">
       <label for="password">密码</label>
       <input id="password" type="password" placeholder="请输入密码" autocomplete="current-password" />
@@ -1039,7 +1089,9 @@
         <span class="brand-name">五谷丰登</span>
       </div>
       <div class="header-right">
+        <a href="public.html" style="font-size:12px;color:var(--muted);background:#f5eeeb;border-radius:20px;padding:5px 10px;text-decoration:none;">公共书架</a>
         <span class="user-badge" id="userEmail">-</span>
+        <a href="public.html" style="text-decoration:none;"><button class="btn-ghost btn-sm">共同书架</button></a>
         <button class="btn-ghost btn-sm" id="btnSignOut">退出</button>
       </div>
     </div>
@@ -1081,7 +1133,7 @@
     <!-- Records -->
     <div class="list-panel">
       <div class="list-head">
-        <span class="list-head-title">我的书架</span>
+        <span class="list-head-title">书架</span>
         <div style="display:flex;align-items:center;gap:8px;">
           <div id="filterIndicator"></div>
 
@@ -1160,10 +1212,22 @@
         <div class="tag-area">
           <div id="tagChips"></div>
           <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">
-            <input id="customTagInput" type="text" placeholder="输入自定义标签" style="flex:2;" />
+            <input id="customTagInput" type="text" placeholder="输入自定义标签，回车添加" style="flex:2;" />
             <button class="btn-secondary btn-sm" id="btnAddCustomTag" style="flex:1;">添加</button>
             <button class="btn-danger btn-sm" id="btnClearTags" style="flex:1;">清空</button>
           </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>可见范围</label>
+        <div style="display:flex;gap:10px;">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:300;">
+            <input type="radio" name="visibility" id="visPrivate" value="private" checked /> 私密
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:300;">
+            <input type="radio" name="visibility" id="visPublic" value="public" /> 公开
+          </label>
         </div>
       </div>
 
@@ -1202,6 +1266,13 @@
         <textarea id="notes" placeholder="感想、摘抄、推荐理由…"></textarea>
       </div>
 
+      <div class="field" style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <label style="margin:0;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" id="isPublic" style="width:auto;border:none;box-shadow:none;padding:0;" />
+          公开到共同书架
+        </label>
+        <span style="font-size:11px;color:var(--muted);">（其他用户可见书名、作者、评分、标签）</span>
+      </div>
       <div class="save-actions">
         <button class="btn-primary" id="btnSave">保存记录</button>
         <button class="btn-secondary" id="btnCancelSave">取消</button>
@@ -1261,6 +1332,8 @@
   let selectedTags = new Set(), customTagsByType = {};
   let authMode = 'signin', editingRecordId = null;
   let uploadedOriginalIntroUrl = '', selectedDateFilter = '', selectedMonthFilter = '';
+  let currentPage = 1;
+  const PAGE_SIZE = 20;
   let calYear, calMonth;
 
   function initCalMonth() {
@@ -1359,6 +1432,7 @@
     els.tabSignIn.className = 'auth-tab' + (isIn ? ' active' : '');
     els.tabSignUp.className = 'auth-tab' + (!isIn ? ' active' : '');
     els.btnAuthMain.textContent = isIn ? '登录' : '注册';
+    document.getElementById('nicknameField').style.display = isIn ? 'none' : 'block';
     setAuthStatus('');
   }
 
@@ -1484,6 +1558,11 @@
     if (selectedDateFilter) pills.push(`<span class="filter-pill">📅 ${selectedDateFilter} <span class="filter-pill-x" data-cleardate="1">×</span></span>`);
     els.filterIndicator.innerHTML = pills.join('');
 
+    currentPage = Math.min(currentPage, Math.ceil(filtered.length / PAGE_SIZE) || 1);
+    const pageStart = (currentPage - 1) * PAGE_SIZE;
+    const paged = filtered.slice(pageStart, pageStart + PAGE_SIZE);
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+
     if (!filtered.length) {
       els.recordsList.innerHTML = `
         <div class="empty-state">
@@ -1493,7 +1572,7 @@
       return;
     }
 
-    els.recordsList.innerHTML = `<div class="record-list">${filtered.map(r => {
+    els.recordsList.innerHTML = `<div class="record-list">${paged.map(r => {
       const icon = TYPE_ICONS[r.type] || '📌';
       const tagsHtml = (r.tags||[]).map(t => `<span class="meta-tag">${esc(t)}</span>`).join('');
       const authorChars = [r.author, r.main_characters].filter(Boolean).map(s => esc(s)).join(' · ');
@@ -1515,16 +1594,26 @@
             ${tagsHtml ? `<div class="record-row-bottom"><div class="record-row-tags">${tagsHtml}</div><div class="record-row-actions"><button class="btn-ghost btn-sm" data-view="${r.id}">查看</button><button class="btn-secondary btn-sm" data-edit="${r.id}">编辑</button></div></div>` : `<div class="record-row-bottom"><div></div><div class="record-row-actions"><button class="btn-ghost btn-sm" data-view="${r.id}">查看</button><button class="btn-secondary btn-sm" data-edit="${r.id}">编辑</button></div></div>`}
           </div>
         </div>`;
-    }).join('')}</div>`;
+    }).join('')}</div>${totalPages > 1 ? `
+    <div class="pagination">
+      <button class="page-btn" ${currentPage===1?'disabled':''} data-page="${currentPage-1}">‹</button>
+      ${Array.from({length:totalPages},(_,i)=>`<button class="page-btn ${i+1===currentPage?'active':''}" data-page="${i+1}">${i+1}</button>`).join('')}
+      <button class="page-btn" ${currentPage===totalPages?'disabled':''} data-page="${currentPage+1}">›</button>
+    </div>` : ''}`;
   }
 
   // ── Auth ──
   async function signUp() {
     const email = els.email.value.trim(), password = els.password.value;
+    const nickname = document.getElementById('nickname').value.trim();
     if (!email || !password) return alert('请填写邮箱和密码');
+    if (!nickname) return alert('请填写昵称');
     setAuthStatus('注册中…');
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) { setAuthStatus('注册失败：' + error.message); return; }
+    if (data.user) {
+      await supabase.from('profiles').insert({ id: data.user.id, nickname });
+    }
     setAuthStatus('注册成功，请登录');
     authMode = 'signin'; updateAuthUI();
   }
@@ -1584,7 +1673,9 @@
         intro: '',
         rating_writing: starDims.writing || null,
         rating_plot: starDims.plot || null,
-        rating_character: starDims.character || null
+        rating_character: starDims.character || null,
+        is_public: document.getElementById('visPublic').checked,
+        is_public: document.getElementById('isPublic').checked
       };
       if (!payload.name) { alert('请填写名称'); return; }
       let error;
@@ -1630,9 +1721,11 @@
     els.summary.value = r.story_summary || '';
     els.notes.value = r.notes || '';
     selectedTags = new Set(r.tags || []);
+    document.getElementById('isPublic').checked = r.is_public || false;
     starDims.writing = r.rating_writing || 0;
     starDims.plot = r.rating_plot || 0;
     starDims.character = r.rating_character || 0;
+    document.getElementById(r.is_public ? 'visPublic' : 'visPrivate').checked = true;
     initAllStars();
     if (starDims.writing || starDims.plot || starDims.character) updateStarTotal();
     uploadedOriginalIntroUrl = r.cover_url || '';
@@ -1664,6 +1757,7 @@
     els.customTagInput.value = ''; els.uploadPreview.innerHTML = '';
     uploadedOriginalIntroUrl = '';
     selectedTags = new Set();
+    document.getElementById('isPublic').checked = false;
     starDims.writing = 0; starDims.plot = 0; starDims.character = 0;
     initAllStars();
     updateTypeFields(); renderTagChips();
@@ -1865,7 +1959,7 @@
   els.password.addEventListener('keydown', e => { if (e.key === 'Enter') els.btnAuthMain.click(); });
 
   els.btnSignOut.addEventListener('click', signOut);
-  els.searchInput.addEventListener('input', renderRecords);
+  els.searchInput.addEventListener('input', () => { currentPage = 1; renderRecords(); });
   els.btnOpenAdd.addEventListener('click', () => { resetForm(); initAllStars(); els.recordDialog.showModal(); });
   els.btnCloseDialog.addEventListener('click', () => els.recordDialog.close());
   document.getElementById('btnCloseView').addEventListener('click', () => document.getElementById('viewDialog').close());
@@ -1924,11 +2018,11 @@
     }
     if (t.dataset.typefilter) {
       els.searchInput.dataset.typefilter = t.dataset.typefilter;
-      renderRecords();
+      currentPage = 1; renderRecords();
     }
     if (t.dataset.datefilter) {
       selectedDateFilter = selectedDateFilter === t.dataset.datefilter ? '' : t.dataset.datefilter;
-      renderCalendar(); renderRecords();
+      currentPage = 1; renderCalendar(); renderRecords();
     }
     if (t.dataset.cleartype) {
       els.searchInput.dataset.typefilter = ''; renderRecords();
@@ -1943,6 +2037,11 @@
     }
     if (t.dataset.clearmonth) {
       selectedMonthFilter = ''; renderCalendar(); renderRecords();
+    }
+    if (t.dataset.page) {
+      currentPage = parseInt(t.dataset.page);
+      renderRecords();
+      document.querySelector('.list-panel').scrollIntoView({behavior:'smooth'});
     }
     if (t.dataset.view) openView(t.dataset.view);
     if (t.dataset.edit) openEdit(t.dataset.edit);
