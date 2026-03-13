@@ -1131,7 +1131,10 @@
         <div class="cal-body">
           <div class="cal-nav">
             <button class="cal-nav-btn" id="calPrev">‹</button>
-            <span class="cal-month-label" id="calMonthLabel"></span>
+            <span class="cal-month-label" id="calMonthLabel">
+              <select id="calYearSelect" style="border:none;background:transparent;font:inherit;font-size:13px;color:var(--accent-deep);cursor:pointer;outline:none;"></select>
+              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:13px;color:var(--accent-deep);cursor:pointer;outline:none;"></select>
+            </span>
             <button class="cal-nav-btn" id="calNext">›</button>
           </div>
           <div id="calendarWrap"></div>
@@ -1504,7 +1507,20 @@
   function renderCalendar() {
     const monthKey = `${calYear}-${String(calMonth).padStart(2,'0')}`;
     const monthKey2 = `${calYear}-${String(calMonth).padStart(2,'0')}`;
-    els.calMonthLabel.innerHTML = `<span style="cursor:pointer;text-decoration:${selectedMonthFilter===monthKey2?'underline':'none'};opacity:${selectedMonthFilter===monthKey2?'1':'0.85'};" data-monthfilter="${monthKey2}">${calYear}年${calMonth}月</span>`;
+    // populate year select
+    const yearSel = document.getElementById('calYearSelect');
+    const monthSel = document.getElementById('calMonthSelect');
+    if (yearSel && monthSel) {
+      const years = [...new Set(allRecords.map(r => r.review_date?.slice(0,4)).filter(Boolean))].sort();
+      const currentYear = String(calYear);
+      if (!years.includes(currentYear)) years.push(currentYear);
+      years.sort();
+      yearSel.innerHTML = years.map(y => `<option value="${y}" ${y===currentYear?'selected':''}>${y}年</option>`).join('');
+      monthSel.innerHTML = Array.from({length:12},(_,i)=>{
+        const m = i+1;
+        return `<option value="${m}" ${m===calMonth?'selected':''}>${m}月</option>`;
+      }).join('');
+    }
 
     const firstDay = new Date(calYear, calMonth - 1, 1);
     const lastDate = new Date(calYear, calMonth, 0).getDate();
@@ -1586,7 +1602,7 @@
               <span class="meta-rating">★ ${r.rating} · ${getRatingLabel(r.rating)}</span>
               
               ${wordStr ? `<span class="meta-tag">✍️ ${wordStr}</span>` : ''}
-              ${r.is_public ? `<span title="已公开" style="font-size:10px;color:#cbb8b5;margin-left:2px;vertical-align:middle;">👁</span>` : ''}
+              ${r.is_public ? `<svg title="已公开" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d4c5c3" stroke-width="1.8" style="margin-left:3px;vertical-align:middle;flex-shrink:0;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>` : ''}
             </div>
             ${tagsHtml ? `<div class="record-row-bottom"><div class="record-row-tags">${tagsHtml}</div><div class="record-row-actions"><button class="btn-ghost btn-sm" data-view="${r.id}">查看</button><button class="btn-secondary btn-sm" data-edit="${r.id}">编辑</button></div></div>` : `<div class="record-row-bottom"><div></div><div class="record-row-actions"><button class="btn-ghost btn-sm" data-view="${r.id}">查看</button><button class="btn-secondary btn-sm" data-edit="${r.id}">编辑</button></div></div>`}
           </div>
@@ -1995,6 +2011,14 @@
   els.customTagInput.addEventListener('keydown', e => { if (e.key === 'Enter') addCustomTag(); });
   els.originalIntroFile.addEventListener('change', e => { const f = e.target.files?.[0]; if (f) uploadImage(f); });
 
+  document.getElementById('calYearSelect')?.addEventListener('change', e => {
+    calYear = parseInt(e.target.value);
+    selectedDateFilter = ''; renderCalendar(); renderRecords();
+  });
+  document.getElementById('calMonthSelect')?.addEventListener('change', e => {
+    calMonth = parseInt(e.target.value);
+    selectedDateFilter = ''; renderCalendar(); renderRecords();
+  });
   els.calPrev.addEventListener('click', () => {
     calMonth--; if (calMonth < 1) { calMonth = 12; calYear--; }
     selectedDateFilter = ''; renderCalendar(); renderRecords();
