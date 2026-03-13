@@ -1708,7 +1708,7 @@
     starDims.writing = r.rating_writing || 0;
     starDims.plot = r.rating_plot || 0;
     starDims.character = r.rating_character || 0;
-    document.getElementById(r.is_public ? 'visPublic' : 'visPrivate').checked = true;
+
     initAllStars();
     if (starDims.writing || starDims.plot || starDims.character) updateStarTotal();
     uploadedOriginalIntroUrl = r.cover_url || '';
