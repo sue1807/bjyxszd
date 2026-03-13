@@ -1159,12 +1159,10 @@
         <label>标签</label>
         <div class="tag-area">
           <div id="tagChips"></div>
-          <div class="grid-2" style="margin-top:8px;">
-            <input id="customTagInput" type="text" placeholder="输入自定义标签，回车添加" />
-            <button class="btn-secondary" id="btnAddCustomTag">添加</button>
-          </div>
-          <div style="margin-top:6px;">
-            <button class="btn-danger btn-sm" id="btnClearTags">清空所有标签</button>
+          <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">
+            <input id="customTagInput" type="text" placeholder="输入自定义标签，回车添加" style="flex:2;" />
+            <button class="btn-secondary btn-sm" id="btnAddCustomTag" style="flex:1;">添加</button>
+            <button class="btn-danger btn-sm" id="btnClearTags" style="flex:1;">清空</button>
           </div>
         </div>
       </div>
@@ -1294,20 +1292,22 @@
     for (let i = 1; i <= 5; i++) {
       const unit = document.createElement('div');
       unit.className = 'star-unit';
+      unit.dataset.dim = dimId;
+      unit.dataset.val = i;
       const fill = value >= i ? 1 : value >= i - 0.5 ? 0.5 : 0;
+      const leftColor = fill >= 0.5 ? '#c9847a' : '#e8d5d0';
+      const rightColor = fill >= 1 ? '#c9847a' : '#e8d5d0';
       unit.innerHTML = `
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="half_${dimId}_${i}">
-              <stop offset="50%" stop-color="${fill >= 0.5 ? '#c9847a' : '#e8d5d0'}"/>
-              <stop offset="50%" stop-color="${fill >= 1 ? '#c9847a' : '#e8d5d0'}"/>
+            <linearGradient id="sg_${dimId}_${i}" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="50%" stop-color="${leftColor}"/>
+              <stop offset="50%" stop-color="${rightColor}"/>
             </linearGradient>
           </defs>
           <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
-            fill="url(#half_${dimId}_${i})" stroke="#c9847a" stroke-width="1.2"/>
-        </svg>
-        <div class="star-half-left" data-dim="${dimId}" data-val="${i - 0.5}"></div>
-        <div class="star-half-right" data-dim="${dimId}" data-val="${i}"></div>`;
+            fill="url(#sg_${dimId}_${i})" stroke="#c9847a" stroke-width="1.2"/>
+        </svg>`;
       container.appendChild(unit);
     }
   }
@@ -1880,17 +1880,20 @@
 
   els.type.addEventListener('change', () => { selectedTags = new Set(); updateTypeFields(); renderTagChips(); saveDraft(); });
   document.addEventListener('click', e => {
-    const t = e.target;
-    if (t.dataset.dim && t.dataset.val !== undefined) {
+    const t = e.target.closest('.star-unit');
+    if (t && t.dataset.dim && t.dataset.val !== undefined) {
       const dim = t.dataset.dim;
       const val = parseFloat(t.dataset.val);
-      // toggle off if clicking same value
-      starDims[dim] = starDims[dim] === val ? 0 : val;
+      const cur = starDims[dim];
+      // cycle: 0→full→half→0, or if clicking different star: set full
+      if (cur === val) starDims[dim] = val - 0.5;
+      else if (cur === val - 0.5) starDims[dim] = 0;
+      else starDims[dim] = val;
       renderStars(dim, starDims[dim]);
       updateStarTotal();
       saveDraft();
     }
-  }, true); // capture phase so it fires before other handlers
+  });
 
   els.btnAddCustomTag.addEventListener('click', addCustomTag);
   document.getElementById('btnClearTags').addEventListener('click', () => {
