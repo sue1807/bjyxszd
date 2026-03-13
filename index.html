@@ -302,34 +302,42 @@
     /* Stats */
     .stats-body { padding: 8px 10px; }
 
-    .stat-total {
+    .stat-kpi-row {
       display: flex;
-      align-items: baseline;
       gap: 6px;
-      padding: 6px 8px;
+      margin-bottom: 8px;
+    }
+
+    .stat-kpi {
+      flex: 1;
       background: linear-gradient(135deg, #fdf4f2, #fdecea);
       border-radius: 12px;
-      margin-bottom: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
 
-    .stat-total-num {
-      font-size: 24px;
+    .stat-kpi-num {
+      font-size: 22px;
       font-weight: 800;
       color: var(--accent-deep);
+      line-height: 1.1;
     }
 
-    .stat-total-label {
-      font-size: 12px;
+    .stat-kpi-label {
+      font-size: 10px;
       color: var(--muted);
+      letter-spacing: 0.3px;
     }
 
-    .stat-types { display: flex; flex-direction: column; gap: 6px; }
+    .stat-types { display: flex; flex-direction: column; gap: 4px; }
 
     .stat-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 5px 8px;
+      padding: 4px 8px;
       border-radius: 10px;
       cursor: pointer;
       transition: .15s;
@@ -339,12 +347,12 @@
     .stat-row:hover { background: var(--accent-light); }
 
     .stat-row-name {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text);
     }
 
     .stat-row-count {
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 700;
       color: var(--accent);
     }
@@ -1234,15 +1242,29 @@
     }
 
     const totalWords = allRecords.reduce((sum, r) => sum + (r.story_summary||'').length + (r.notes||'').length, 0);
-    const wordLabel = totalWords >= 10000 ? (totalWords/10000).toFixed(1)+'万字' : totalWords+'字';
+    const wordLabel = totalWords >= 10000 ? (totalWords/10000).toFixed(1)+'万' : totalWords+'字';
+
+    const now = new Date();
+    const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const monthCount = allRecords.filter(r => {
+      const k = getDateKey(r);
+      return k && k.startsWith(thisMonth);
+    }).length;
+
     els.statsOverview.innerHTML = `
-      <div class="stat-total">
-        <span class="stat-total-num">${allRecords.length}</span>
-        <span class="stat-total-label">条记录</span>
-      </div>
-      <div style="font-size:11px;color:var(--muted);padding:2px 8px 6px;display:flex;align-items:center;gap:4px;">
-        <span>✍️ 累计书写</span>
-        <span style="font-weight:700;color:var(--accent-deep);">${wordLabel}</span>
+      <div class="stat-kpi-row">
+        <div class="stat-kpi">
+          <span class="stat-kpi-num">${allRecords.length}</span>
+          <span class="stat-kpi-label">📚 总记录</span>
+        </div>
+        <div class="stat-kpi">
+          <span class="stat-kpi-num">${monthCount}</span>
+          <span class="stat-kpi-label">🌙 本月</span>
+        </div>
+        <div class="stat-kpi">
+          <span class="stat-kpi-num">${wordLabel}</span>
+          <span class="stat-kpi-label">✍️ 累计书写</span>
+        </div>
       </div>
       <div class="stat-types">
         ${entries.map(([type, count]) => `
@@ -1338,7 +1360,6 @@
             </div>
             <div class="record-row-line2">
               <span class="meta-rating">★ ${r.rating} · ${getRatingLabel(r.rating)}</span>
-              <span class="meta-tag">${esc(r.type)}</span>
               ${date ? `<span class="meta-tag">📅 ${date}</span>` : ''}
               ${wordStr ? `<span class="meta-tag">✍️ ${wordStr}</span>` : ''}
             </div>
