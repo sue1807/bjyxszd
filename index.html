@@ -1244,7 +1244,7 @@
             <div class="stars" id="starsCharacter" data-dim="character"></div>
           </div>
           <div class="star-total-preview" id="starTotalPreview">综合评分：—</div>
-          <input id="quickReview" type="text" placeholder="锐评，或夸，或喷，不要手下留情" style="margin-top:8px;background:transparent;border:none;border-top:1px solid var(--line);border-radius:0;padding:8px 4px;font-size:12px;box-shadow:none;" />
+          <textarea id="quickReview" placeholder="锐评，或夸，或喷，不要手下留情" rows="2" style="margin-top:8px;background:transparent;border:none;border-top:1px solid var(--line);border-radius:0;padding:8px 4px;font-size:12px;box-shadow:none;resize:none;width:100%;line-height:1.6;"></textarea>
         </div>
         <input type="hidden" id="rating" value="0" />
       </div>
@@ -1780,12 +1780,17 @@
     els.dialogTitle.textContent = '新增记录';
   }
 
+  setInterval(() => {
+    if (document.getElementById('recordDialog').open) saveDraft();
+  }, 30000);
+
   function saveDraft() {
     const draft = {
       name: els.name.value, type: els.type.value, rating: els.rating.value,
       reviewDate: els.reviewDate.value, author: els.author.value,
       mainCharacters: els.mainCharacters.value, summary: els.summary.value,
-      notes: els.notes.value, selectedTags: [...selectedTags], uploadedOriginalIntroUrl
+      notes: els.notes.value, quickReview: document.getElementById('quickReview').value,
+      selectedTags: [...selectedTags], uploadedOriginalIntroUrl
     };
     localStorage.setItem(getDraftKey(), JSON.stringify(draft));
     setDraftState('草稿已自动保存');
@@ -1799,6 +1804,7 @@
       els.rating.value = d.rating || '8'; els.reviewDate.value = d.reviewDate || '';
       els.author.value = d.author || ''; els.mainCharacters.value = d.mainCharacters || '';
       els.summary.value = d.summary || ''; els.notes.value = d.notes || '';
+      document.getElementById('quickReview').value = d.quickReview || '';
       selectedTags = new Set(d.selectedTags || []);
       uploadedOriginalIntroUrl = d.uploadedOriginalIntroUrl || '';
       if (uploadedOriginalIntroUrl) {
@@ -1921,6 +1927,10 @@
           <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">故事梗概</div>
           <div style="font-size:14px;line-height:1.8;color:var(--text);background:var(--soft);padding:12px;border-radius:12px;">${esc(r.story_summary)}</div>
         </div>` : ''}
+      ${r.personal_review ? `
+        <div style="margin-bottom:14px;">
+          <div style="font-size:13px;color:var(--accent);font-style:italic;padding:8px 12px;background:var(--soft);border-radius:10px;border-left:3px solid var(--accent-light);">💬 ${esc(r.personal_review)}</div>
+        </div>` : ''}
       ${r.notes ? `
         <div style="margin-bottom:14px;">
           <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">读后感</div>
@@ -2030,6 +2040,7 @@
 
   ['name','reviewDate','author','mainCharacters','summary','notes'].forEach(k => {
     els[k]?.addEventListener('input', saveDraft);
+  document.getElementById('quickReview')?.addEventListener('input', saveDraft);
   });
 
   document.addEventListener('click', async e => {
