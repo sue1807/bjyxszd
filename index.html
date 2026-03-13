@@ -518,6 +518,14 @@
       margin-top: 2px;
     }
 
+    .record-row-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 3px;
+      gap: 8px;
+    }
+
     .record-row-actions {
       display: flex;
       flex-direction: row;
@@ -1040,6 +1048,9 @@
             <input id="customTagInput" type="text" placeholder="输入自定义标签，回车添加" />
             <button class="btn-secondary" id="btnAddCustomTag">添加</button>
           </div>
+          <div style="margin-top:6px;">
+            <button class="btn-danger btn-sm" id="btnClearTags">清空所有标签</button>
+          </div>
         </div>
       </div>
 
@@ -1313,6 +1324,8 @@
       const tagsHtml = (r.tags||[]).map(t => `<span class="meta-tag">${esc(t)}</span>`).join('');
       const authorChars = [r.author, r.main_characters].filter(Boolean).map(s => esc(s)).join(' · ');
       const date = r.review_date || '';
+      const words = (r.story_summary||'').length + (r.notes||'').length;
+      const wordStr = words > 0 ? (words >= 10000 ? (words/10000).toFixed(1)+'万字' : words+'字') : '';
       return `
         <div class="record-row">
           <div class="record-row-main">
@@ -1320,17 +1333,13 @@
               ${icon} ${esc(r.name)}
               ${authorChars ? `<span class="record-sub">${authorChars}</span>` : ''}
             </div>
-            ${(r.story_summary || r.notes) ? `<div class="record-wordcount">${[r.story_summary ? '梗概 '+r.story_summary.length+'字' : '', r.notes ? '读后感 '+r.notes.length+'字' : ''].filter(Boolean).join(' · ')}</div>` : ''}
             <div class="record-row-line2">
               <span class="meta-rating">★ ${r.rating} · ${getRatingLabel(r.rating)}</span>
               <span class="meta-tag">${esc(r.type)}</span>
               ${date ? `<span class="meta-tag">📅 ${date}</span>` : ''}
+              ${wordStr ? `<span class="meta-tag">✍️ ${wordStr}</span>` : ''}
             </div>
-            ${tagsHtml ? `<div class="record-row-tags">${tagsHtml}</div>` : ''}
-          </div>
-          <div class="record-row-actions">
-            <button class="btn-ghost btn-sm" data-view="${r.id}">查看</button>
-            <button class="btn-secondary btn-sm" data-edit="${r.id}">编辑</button>
+            ${tagsHtml ? `<div class="record-row-bottom"><div class="record-row-tags">${tagsHtml}</div><div class="record-row-actions"><button class="btn-ghost btn-sm" data-view="${r.id}">查看</button><button class="btn-secondary btn-sm" data-edit="${r.id}">编辑</button></div></div>` : `<div class="record-row-bottom"><div></div><div class="record-row-actions"><button class="btn-ghost btn-sm" data-view="${r.id}">查看</button><button class="btn-secondary btn-sm" data-edit="${r.id}">编辑</button></div></div>`}
           </div>
         </div>`;
     }).join('')}</div>`;
@@ -1386,7 +1395,7 @@
   async function saveRecord() {
     if (!currentUser) return;
     els.btnSave.disabled = true;
-    setSaveState(editingRecordId ? '更新中…' : '保存中…');
+    setSaveState('保存中…');
     try {
       const payload = {
         name: els.name.value.trim(),
@@ -1412,12 +1421,11 @@
         ({ error } = await supabase.from('spirit_records')
           .insert({ ...payload, user_id: currentUser.id }));
       }
-      if (error) { setSaveState('保存失败：' + error.message); alert(error.message); return; }
+      if (error) { setSaveState('失败：' + error.message); alert(error.message); return; }
       setSaveState('✓ 保存成功');
       els.recordDialog.close();
       resetForm();
       localStorage.removeItem(getDraftKey());
-      allRecords = [];
       await fetchRecords();
     } catch(e) {
       setSaveState('保存异常');
@@ -1689,6 +1697,9 @@
   els.rating.addEventListener('input', () => { updateRatingUI(); saveDraft(); });
   els.type.addEventListener('change', () => { selectedTags = new Set(); updateTypeFields(); renderTagChips(); saveDraft(); });
   els.btnAddCustomTag.addEventListener('click', addCustomTag);
+  document.getElementById('btnClearTags').addEventListener('click', () => {
+    selectedTags = new Set(); renderTagChips(); saveDraft();
+  });
   els.customTagInput.addEventListener('keydown', e => { if (e.key === 'Enter') addCustomTag(); });
   els.originalIntroFile.addEventListener('change', e => { const f = e.target.files?.[0]; if (f) uploadImage(f); });
 
