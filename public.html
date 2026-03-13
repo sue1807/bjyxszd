@@ -42,6 +42,7 @@
     .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 16px; pointer-events: none; }
     #searchInput { width: 100%; padding: 11px 14px 11px 40px; font-size: 12px; background: #fff; border: 1.5px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); font: inherit; color: var(--text); outline: none; }
     #searchInput:focus { border-color: var(--accent); }
+    input::placeholder { font-size: 13px; color: var(--muted); }
 
     .global-status { font-size: 11px; color: var(--muted); text-align: center; margin-bottom: 10px; }
 
@@ -73,6 +74,10 @@
     .user-row { display: flex; align-items: center; flex-wrap: nowrap; gap: 4px; padding: 2px 0; }
     .user-row-tags { display: flex; flex-wrap: wrap; gap: 3px; }
     .meta-tag-sm { font-size: 10px; padding: 1px 5px; border-radius: 20px; background: #f5eeeb; color: #b89890; }
+    .user-row { cursor: pointer; border-radius: 8px; transition: background .15s; }
+    .user-row:hover { background: #fdf5f3; }
+    .quick-review { display: none; font-size: 11px; color: var(--accent-deep); padding: 3px 0 3px 22px; font-style: italic; }
+    .user-row.open + .quick-review { display: block; }
 
     .empty-state { padding: 48px 20px; text-align: center; color: var(--muted); }
     .empty-state-icon { font-size: 40px; margin-bottom: 10px; }
@@ -165,7 +170,7 @@
   async function loadData() {
     document.getElementById('globalStatus').textContent = '加载中…';
     const [recRes, profRes] = await Promise.all([
-      supabase.from('spirit_records').select('id,name,type,rating,tags,author,main_characters,review_date,user_id,is_public').eq('is_public', true).order('name').order('review_date', { ascending: false, nullsFirst: false }),
+      supabase.from('spirit_records').select('id,name,type,rating,tags,author,main_characters,review_date,user_id,is_public,quick_review').eq('is_public', true).order('name').order('review_date', { ascending: false, nullsFirst: false }),
       supabase.from('profiles').select('id,nickname')
     ]);
     allRecords = recRes.data || [];
@@ -217,12 +222,13 @@
         const usersHtml = g.users.map(r => {
           const nickname = profiles[r.user_id] || '匿名';
           const tagsHtml = (r.tags||[]).map(t => `<span class="meta-tag-sm">${esc(t)}</span>`).join('');
-          return `<div class="user-row">
+          const hasReview = r.quick_review?.trim();
+          return `<div class="user-row${hasReview ? ' has-review' : ''}" data-review="${hasReview ? esc(r.quick_review) : ''}">
             <span class="meta-rating">★ ${r.rating} · ${getRatingLabel(r.rating)}</span>
-            <span class="record-nickname" style="flex-shrink:0;">&nbsp;${esc(nickname)}</span>
+            <span class="record-nickname" style="flex-shrink:0;">&nbsp;${esc(nickname)}${hasReview ? ' 💬' : ''}</span>
             <span class="user-row-tags">${tagsHtml}</span>
             ${r.review_date ? `<span class="record-date-right" style="flex-shrink:0;">${r.review_date}</span>` : ''}
-          </div>`;
+          </div>${hasReview ? `<div class="quick-review">${esc(r.quick_review)}</div>` : ''}`;
         }).join('');
         return `<div class="record-row">
           <div class="record-row-title">${icon} ${esc(b.name)}${authorStr ? `<span class="record-sub">${authorStr}</span>` : ''}</div>
@@ -237,6 +243,11 @@
   }
 
   document.getElementById('searchInput').addEventListener('input', () => { currentPage=1; renderRecords(); });
+
+  document.addEventListener('click', e => {
+    const row = e.target.closest('.user-row.has-review');
+    if (row) { row.classList.toggle('open'); }
+  }, true);
 
   document.addEventListener('click', e => {
     if (e.target.dataset.type !== undefined && e.target.classList.contains('filter-chip')) {
