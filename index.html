@@ -1131,9 +1131,9 @@
         <div class="cal-body">
           <div class="cal-nav">
             <button class="cal-nav-btn" id="calPrev">‹</button>
-            <span class="cal-month-label" id="calMonthLabel">
-              <select id="calYearSelect" style="border:none;background:transparent;font:inherit;font-size:13px;color:var(--accent-deep);cursor:pointer;outline:none;"></select>
-              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:13px;color:var(--accent-deep);cursor:pointer;outline:none;"></select>
+            <span class="cal-month-label" id="calMonthLabel" style="display:flex;align-items:center;gap:2px;">
+              <select id="calYearSelect" style="border:none;background:transparent;font:inherit;font-size:14px;font-weight:500;color:var(--accent-deep);cursor:pointer;outline:none;max-width:80px;"></select>
+              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:14px;font-weight:500;color:var(--accent-deep);cursor:pointer;outline:none;max-width:60px;"></select>
             </span>
             <button class="cal-nav-btn" id="calNext">›</button>
           </div>
@@ -1541,7 +1541,7 @@
       const has = !!counter[k];
       const sel = selectedDateFilter === k;
       html += `<div class="cal-day ${has ? 'has-rec' : ''} ${sel ? 'selected' : ''}" data-datefilter="${k}">
-        ${day}${has ? `<span class="cal-dot"></span>` : ''}
+        ${day}
       </div>`;
     }
     html += `</div>`;
@@ -1652,7 +1652,7 @@
     els.userEmail.textContent = currentUser.email;
     if (currentUser.email) localStorage.setItem('remembered_login_email', currentUser.email);
     showScreen('app');
-    loadDraft();
+    // draft loaded when dialog opens
     fetchRecords();
   }
 
@@ -1985,7 +1985,7 @@
 
   els.btnSignOut.addEventListener('click', signOut);
   els.searchInput.addEventListener('input', () => { currentPage = 1; renderRecords(); });
-  els.btnOpenAdd.addEventListener('click', () => { resetForm(); initAllStars(); els.recordDialog.showModal(); });
+  els.btnOpenAdd.addEventListener('click', () => { resetForm(); loadDraft(); initAllStars(); updateRatingUI(); els.recordDialog.showModal(); });
   els.btnCloseDialog.addEventListener('click', () => els.recordDialog.close());
   document.getElementById('btnCloseView').addEventListener('click', () => document.getElementById('viewDialog').close());
   els.btnCancelSave.addEventListener('click', () => els.recordDialog.close());
