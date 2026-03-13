@@ -863,6 +863,74 @@
       font-weight: 700;
     }
 
+    /* ─── STAR RATING ──────────────────────── */
+    .star-rating-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px;
+      background: #fdf8f7;
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+    }
+
+    .star-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .star-row-label {
+      font-size: 12px;
+      color: var(--muted);
+      width: 32px;
+      flex-shrink: 0;
+    }
+
+    .stars {
+      display: flex;
+      gap: 3px;
+      flex: 1;
+    }
+
+    .star-unit {
+      position: relative;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .star-unit svg {
+      width: 28px;
+      height: 28px;
+      pointer-events: none;
+    }
+
+    .star-half-left, .star-half-right {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 50%;
+    }
+
+    .star-half-left { left: 0; }
+    .star-half-right { right: 0; }
+
+    .star-total-preview {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+      margin-top: 4px;
+      padding-top: 6px;
+      border-top: 1px solid var(--line);
+    }
+
+    .star-total-preview strong {
+      color: var(--accent-deep);
+      font-size: 13px;
+    }
+
     .tag-area {
       border: 1.5px solid var(--line);
       border-radius: 12px;
@@ -1069,10 +1137,22 @@
 
       <div class="field">
         <label>评分</label>
-        <div class="range-wrap">
-          <input id="rating" type="range" min="0" max="10" step="0.5" value="8" />
-          <div class="rating-badge" id="ratingValue">8 / 10 · 推荐</div>
+        <div class="star-rating-wrap">
+          <div class="star-row">
+            <span class="star-row-label">文笔</span>
+            <div class="stars" id="starsWriting" data-dim="writing"></div>
+          </div>
+          <div class="star-row">
+            <span class="star-row-label">情节</span>
+            <div class="stars" id="starsPlot" data-dim="plot"></div>
+          </div>
+          <div class="star-row">
+            <span class="star-row-label">人设</span>
+            <div class="stars" id="starsCharacter" data-dim="character"></div>
+          </div>
+          <div class="star-total-preview" id="starTotalPreview">综合评分：—</div>
         </div>
+        <input type="hidden" id="rating" value="0" />
       </div>
 
       <div class="field">
@@ -1202,6 +1282,52 @@
     if (v >= 5.5) return '普通';
     if (v >= 2.5) return '能看';
     return '难看';
+  }
+
+  // ── Star Rating ──
+  const starDims = { writing: 0, plot: 0, character: 0 };
+
+  function renderStars(dimId, value) {
+    const container = document.getElementById('stars' + dimId.charAt(0).toUpperCase() + dimId.slice(1));
+    if (!container) return;
+    container.innerHTML = '';
+    for (let i = 1; i <= 5; i++) {
+      const unit = document.createElement('div');
+      unit.className = 'star-unit';
+      const fill = value >= i ? 1 : value >= i - 0.5 ? 0.5 : 0;
+      unit.innerHTML = `
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="half_${dimId}_${i}">
+              <stop offset="50%" stop-color="${fill >= 0.5 ? '#c9847a' : '#e8d5d0'}"/>
+              <stop offset="50%" stop-color="${fill >= 1 ? '#c9847a' : '#e8d5d0'}"/>
+            </linearGradient>
+          </defs>
+          <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"
+            fill="url(#half_${dimId}_${i})" stroke="#c9847a" stroke-width="1.2"/>
+        </svg>
+        <div class="star-half-left" data-dim="${dimId}" data-val="${i - 0.5}"></div>
+        <div class="star-half-right" data-dim="${dimId}" data-val="${i}"></div>`;
+      container.appendChild(unit);
+    }
+  }
+
+  function initAllStars() {
+    ['writing', 'plot', 'character'].forEach(d => renderStars(d, starDims[d]));
+    updateStarTotal();
+  }
+
+  function updateStarTotal() {
+    const vals = Object.values(starDims).filter(v => v > 0);
+    if (!vals.length) {
+      document.getElementById('starTotalPreview').innerHTML = '综合评分：—';
+      // keep existing rating value if no stars set
+      return;
+    }
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const total = Math.round(avg * 2 * 10) / 10; // scale to 0-10
+    els.rating.value = total;
+    document.getElementById('starTotalPreview').innerHTML = `综合评分：<strong>★ ${total} · ${getRatingLabel(total)}</strong>`;
   }
 
   function getCustomTagKey() { return currentUser ? `spirit_custom_tags_${currentUser.id}` : 'spirit_custom_tags_guest'; }
@@ -1457,7 +1583,10 @@
         main_characters: els.mainCharacters.value.trim(),
         story_summary: els.summary.value.trim(),
         cover_url: uploadedOriginalIntroUrl || allRecords.find(r => String(r.id) === String(editingRecordId))?.cover_url || '',
-        intro: ''
+        intro: '',
+        rating_writing: starDims.writing || null,
+        rating_plot: starDims.plot || null,
+        rating_character: starDims.character || null
       };
       if (!payload.name) { alert('请填写名称'); return; }
       let error;
@@ -1503,13 +1632,18 @@
     els.summary.value = r.story_summary || '';
     els.notes.value = r.notes || '';
     selectedTags = new Set(r.tags || []);
+    starDims.writing = r.rating_writing || 0;
+    starDims.plot = r.rating_plot || 0;
+    starDims.character = r.rating_character || 0;
+    initAllStars();
+    if (starDims.writing || starDims.plot || starDims.character) updateStarTotal();
     uploadedOriginalIntroUrl = r.cover_url || '';
     if (uploadedOriginalIntroUrl) {
       els.uploadPreview.innerHTML = `<img src="${esc(uploadedOriginalIntroUrl)}" style="max-width:100%;border-radius:12px;" />`;
     } else {
       els.uploadPreview.innerHTML = '';
     }
-    updateRatingUI(); updateTypeFields(); renderTagChips();
+    updateTypeFields(); renderTagChips();
     setSaveState('编辑模式');
     els.dialogTitle.textContent = '编辑记录';
     els.recordDialog.showModal();
@@ -1532,7 +1666,9 @@
     els.customTagInput.value = ''; els.uploadPreview.innerHTML = '';
     uploadedOriginalIntroUrl = '';
     selectedTags = new Set();
-    updateRatingUI(); updateTypeFields(); renderTagChips();
+    starDims.writing = 0; starDims.plot = 0; starDims.character = 0;
+    initAllStars();
+    updateTypeFields(); renderTagChips();
     setSaveState(''); setDraftState('草稿未保存');
     els.dialogTitle.textContent = '新增记录';
   }
@@ -1732,7 +1868,7 @@
 
   els.btnSignOut.addEventListener('click', signOut);
   els.searchInput.addEventListener('input', renderRecords);
-  els.btnOpenAdd.addEventListener('click', () => { resetForm(); els.recordDialog.showModal(); });
+  els.btnOpenAdd.addEventListener('click', () => { resetForm(); initAllStars(); els.recordDialog.showModal(); });
   els.btnCloseDialog.addEventListener('click', () => els.recordDialog.close());
   document.getElementById('btnCloseView').addEventListener('click', () => document.getElementById('viewDialog').close());
   els.btnCancelSave.addEventListener('click', () => els.recordDialog.close());
@@ -1745,6 +1881,19 @@
   els.btnSave.addEventListener('click', saveRecord);
   els.rating.addEventListener('input', () => { updateRatingUI(); saveDraft(); });
   els.type.addEventListener('change', () => { selectedTags = new Set(); updateTypeFields(); renderTagChips(); saveDraft(); });
+  document.addEventListener('click', e => {
+    const t = e.target;
+    if (t.dataset.dim && t.dataset.val !== undefined) {
+      const dim = t.dataset.dim;
+      const val = parseFloat(t.dataset.val);
+      // toggle off if clicking same value
+      starDims[dim] = starDims[dim] === val ? 0 : val;
+      renderStars(dim, starDims[dim]);
+      updateStarTotal();
+      saveDraft();
+    }
+  }, true); // capture phase so it fires before other handlers
+
   els.btnAddCustomTag.addEventListener('click', addCustomTag);
   document.getElementById('btnClearTags').addEventListener('click', () => {
     selectedTags = new Set(); renderTagChips(); saveDraft();
