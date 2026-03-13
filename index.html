@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>五谷丰登</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="五谷丰登" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="theme-color" content="#c9847a" />
   <link rel="preconnect" href="https://fonts.googleapis.cn" crossorigin />
   <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet" />
   <style>
@@ -1133,7 +1139,7 @@
     <!-- Records -->
     <div class="list-panel">
       <div class="list-head">
-        <span class="list-head-title">我的书架</span>
+        <span class="list-head-title">书架</span>
         <div style="display:flex;align-items:center;gap:8px;">
           <div id="filterIndicator"></div>
 
@@ -1208,7 +1214,7 @@
         <div class="tag-area">
           <div id="tagChips"></div>
           <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">
-            <input id="customTagInput" type="text" placeholder="输入自定义" style="flex:2;" />
+            <input id="customTagInput" type="text" placeholder="输入自定义标签，回车添加" style="flex:2;" />
             <button class="btn-secondary btn-sm" id="btnAddCustomTag" style="flex:1;">添加</button>
             <button class="btn-danger btn-sm" id="btnClearTags" style="flex:1;">清空</button>
           </div>
@@ -1632,7 +1638,7 @@
   async function fetchRecords() {
     if (!currentUser) return;
     setGlobal('加载中…');
-    const { data, error } = await supabase.from('spirit_records').select('*').order('review_date', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('spirit_records').select('*').eq('user_id', currentUser.id).order('review_date', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false });
     if (error) { setGlobal('加载失败'); return; }
     allRecords = data || [];
     renderStats(); renderCalendar(); renderRecords();
@@ -2044,6 +2050,10 @@
   });
 
   bootstrap();
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/bjyxszd/sw.js');
+  }
 </script>
 </body>
 </html>
