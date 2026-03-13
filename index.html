@@ -1175,31 +1175,31 @@
       <button class="btn-ghost" id="btnCloseDialog">关闭</button>
     </div>
     <div class="modal-body">
+      <div class="field">
+        <label for="name">名称</label>
+        <input id="name" type="text" placeholder="作品名称" />
+      </div>
+
       <div class="grid-2">
-        <div class="field">
-          <label for="name">名称</label>
-          <input id="name" type="text" placeholder="作品名称" />
-        </div>
         <div class="field">
           <label for="type">类型</label>
           <select id="type"></select>
         </div>
-      </div>
-
-      <div class="grid-2">
         <div class="field">
           <label for="reviewDate">阅读日期</label>
           <input id="reviewDate" type="date" />
         </div>
-        <div class="field" id="authorFieldWrap">
+      </div>
+
+      <div class="grid-2" id="blExtraWrap">
+        <div class="field">
           <label for="author">作者</label>
           <input id="author" type="text" placeholder="作者名" />
         </div>
-      </div>
-
-      <div class="field hidden" id="blExtraWrap">
-        <label for="mainCharacters">主角</label>
-        <input id="mainCharacters" type="text" placeholder="主角名，逗号分隔" />
+        <div class="field">
+          <label for="mainCharacters">主角</label>
+          <input id="mainCharacters" type="text" placeholder="主角名，逗号分隔" />
+        </div>
       </div>
 
       <div class="field">
@@ -1425,9 +1425,7 @@
 
   function updateTypeFields() {
     const isBL = els.type.value === 'BL小说';
-    els.blExtraWrap.classList.toggle('hidden', !isBL);
     els.originalIntroWrap.classList.toggle('hidden', !isBL);
-    document.getElementById('authorFieldWrap').style.display = '';
   }
 
   function renderTagChips() {
@@ -2028,7 +2026,11 @@
       renderRecords();
       document.querySelector('.list-panel').scrollIntoView({behavior:'smooth'});
     }
+    const viewBtn = t.closest('[data-view]');
+    if (viewBtn) { openView(viewBtn.dataset.view); return; }
     if (t.dataset.view) openView(t.dataset.view);
+    const editBtn = t.closest('[data-edit]');
+    if (editBtn) { openEdit(editBtn.dataset.edit); return; }
     if (t.dataset.edit) openEdit(t.dataset.edit);
     if (t.dataset.delete) await deleteRecord(t.dataset.delete);
     if (t.dataset.copy) await copyRecord(t.dataset.copy);
