@@ -94,6 +94,7 @@
     </div>
     <div class="header-right">
       <span class="user-badge" id="userBadge">-</span>
+      <button class="btn-ghost btn-sm" id="btnRefresh">刷新</button>
       <a href="index.html"><button class="btn-ghost btn-sm">我的书架</button></a>
     </div>
   </div>
@@ -161,12 +162,11 @@
   async function loadData() {
     document.getElementById('globalStatus').textContent = '加载中…';
     const [recRes, profRes] = await Promise.all([
-      supabase.from('spirit_records').select('id,name,type,rating,tags,author,main_characters,review_date,user_id,is_public').eq('is_public', true).order('review_date', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }),
+      supabase.from('spirit_records').select('id,name,type,rating,tags,author,main_characters,review_date,user_id,is_public').eq('is_public', true).order('name').order('review_date', { ascending: false, nullsFirst: false }),
       supabase.from('profiles').select('id,nickname')
     ]);
     allRecords = recRes.data || [];
     (profRes.data || []).forEach(p => { profiles[p.id] = p.nickname; });
-
     renderFilters();
     renderRecords();
     document.getElementById('globalStatus').textContent = `共 ${allRecords.length} 条公开记录`;
@@ -197,19 +197,32 @@
       return;
     }
 
+    // Group by name+author
+    const groups = [];
+    const seen = {};
+    paged.forEach(r => {
+      const key = (r.name||'') + '|' + (r.author||'');
+      if (!seen[key]) { seen[key] = groups.length; groups.push({...r, ratings: []}); }
+      groups[seen[key]].ratings.push(r);
+    });
+
     document.getElementById('recordsList').innerHTML = `
-      <div>${paged.map(r => {
-        const icon = TYPE_ICONS[r.type] || '📌';
-        const tagsHtml = (r.tags||[]).map(t => `<span class="meta-tag">${esc(t)}</span>`).join('');
-        const authorStr = [r.author, r.main_characters].filter(Boolean).map(s => esc(s)).join(' · ');
-        const nickname = profiles[r.user_id] || r.user_id?.slice(0,6) || '匿名';
-        return `<div class="record-row">
-          <div class="record-row-title">${icon} ${esc(r.name)}${authorStr ? `<span class="record-sub">${authorStr}</span>` : ''}</div>
-          <div class="record-row-line2">
+      <div>${groups.map(g => {
+        const icon = TYPE_ICONS[g.type] || '📌';
+        const firstWithTags = g.ratings.find(r => r.tags?.length) || g;
+        const tagsHtml = (firstWithTags.tags||[]).map(t => `<span class="meta-tag">${esc(t)}</span>`).join('');
+        const authorStr = [g.author, g.main_characters].filter(Boolean).map(s => esc(s)).join(' · ');
+        const ratingsHtml = g.ratings.map(r => {
+          const nickname = profiles[r.user_id] || '匿名';
+          return `<div class="record-row-line2">
             <span class="meta-rating">★ ${r.rating} · ${getRatingLabel(r.rating)}</span>
-            <span class="record-nickname">by ${esc(nickname)}</span>
-            ${r.review_date ? `<span class="meta-tag record-date-right">📅 ${r.review_date}</span>` : ''}
-          </div>
+            <span class="record-nickname">&nbsp;${esc(nickname)}</span>
+            ${r.review_date ? `<span class="meta-tag" style="margin-left:auto;">📅 ${r.review_date}</span>` : ''}
+          </div>`;
+        }).join('');
+        return `<div class="record-row">
+          <div class="record-row-title">${icon} ${esc(g.name)}${authorStr ? `<span class="record-sub">${authorStr}</span>` : ''}</div>
+          ${ratingsHtml}
           ${tagsHtml ? `<div class="record-row-tags">${tagsHtml}</div>` : ''}
         </div>`;
       }).join('')}</div>
@@ -234,6 +247,7 @@
     }
   });
 
+  document.getElementById('btnRefresh')?.addEventListener('click', loadData);
   init();
 </script>
 </body>

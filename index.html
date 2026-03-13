@@ -1186,6 +1186,34 @@
         </div>
       </div>
 
+      <div class="grid-2">
+        <div class="field">
+          <label for="reviewDate">阅读日期</label>
+          <input id="reviewDate" type="date" />
+        </div>
+        <div class="field" id="authorFieldWrap">
+          <label for="author">作者</label>
+          <input id="author" type="text" placeholder="作者名" />
+        </div>
+      </div>
+
+      <div class="field hidden" id="blExtraWrap">
+        <label for="mainCharacters">主角</label>
+        <input id="mainCharacters" type="text" placeholder="主角名，逗号分隔" />
+      </div>
+
+      <div class="field">
+        <label>标签</label>
+        <div class="tag-area">
+          <div id="tagChips"></div>
+          <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">
+            <input id="customTagInput" type="text" placeholder="输入自定义标签，回车添加" style="flex:2;" />
+            <button class="btn-secondary btn-sm" id="btnAddCustomTag" style="flex:1;">添加</button>
+            <button class="btn-danger btn-sm" id="btnClearTags" style="flex:1;">清空</button>
+          </div>
+        </div>
+      </div>
+
       <div class="field">
         <label>评分</label>
         <div class="star-rating-wrap">
@@ -1204,48 +1232,6 @@
           <div class="star-total-preview" id="starTotalPreview">综合评分：—</div>
         </div>
         <input type="hidden" id="rating" value="0" />
-      </div>
-
-      <div class="field">
-        <label>标签</label>
-        <div class="tag-area">
-          <div id="tagChips"></div>
-          <div style="margin-top:8px;display:flex;gap:6px;align-items:center;">
-            <input id="customTagInput" type="text" placeholder="输入自定义标签，回车添加" style="flex:2;" />
-            <button class="btn-secondary btn-sm" id="btnAddCustomTag" style="flex:1;">添加</button>
-            <button class="btn-danger btn-sm" id="btnClearTags" style="flex:1;">清空</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>可见范围</label>
-        <div style="display:flex;gap:10px;">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:300;">
-            <input type="radio" name="visibility" id="visPrivate" value="private" checked /> 私密
-          </label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:300;">
-            <input type="radio" name="visibility" id="visPublic" value="public" /> 公开
-          </label>
-        </div>
-      </div>
-
-      <div class="grid-2">
-        <div class="field">
-          <label for="reviewDate">阅读日期</label>
-          <input id="reviewDate" type="date" />
-        </div>
-      </div>
-
-      <div class="grid-2 hidden" id="blExtraWrap">
-        <div class="field">
-          <label for="author">作者</label>
-          <input id="author" type="text" placeholder="作者名" />
-        </div>
-        <div class="field">
-          <label for="mainCharacters">主角</label>
-          <input id="mainCharacters" type="text" placeholder="主角名，逗号分隔" />
-        </div>
       </div>
 
       <div class="field hidden" id="originalIntroWrap">
@@ -1441,6 +1427,7 @@
     const isBL = els.type.value === 'BL小说';
     els.blExtraWrap.classList.toggle('hidden', !isBL);
     els.originalIntroWrap.classList.toggle('hidden', !isBL);
+    document.getElementById('authorFieldWrap').style.display = '';
   }
 
   function renderTagChips() {
@@ -1673,7 +1660,6 @@
         rating_writing: starDims.writing || null,
         rating_plot: starDims.plot || null,
         rating_character: starDims.character || null,
-        is_public: document.getElementById('visPublic').checked,
         is_public: document.getElementById('isPublic').checked
       };
       if (!payload.name) { alert('请填写名称'); return; }
