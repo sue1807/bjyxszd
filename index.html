@@ -322,7 +322,7 @@
     }
 
     .stat-kpi-num {
-      font-size: 22px;
+      font-size: 18px;
       font-weight: 800;
       color: var(--accent-deep);
       line-height: 1;
@@ -354,24 +354,24 @@
     }
 
     /* Calendar */
-    .cal-body { padding: 8px 8px 8px; }
+    .cal-body { padding: 6px 6px 6px; }
 
     .cal-nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .cal-nav-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
       background: #f5eeeb;
       border: none;
       cursor: pointer;
       color: var(--accent-deep);
-      font-size: 14px;
+      font-size: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -382,7 +382,7 @@
     .cal-nav-btn:hover { background: var(--accent-light); }
 
     .cal-month-label {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 700;
       color: var(--accent-deep);
     }
@@ -390,24 +390,24 @@
     .cal-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 3px;
+      gap: 2px;
     }
 
     .cal-wd {
       text-align: center;
-      font-size: 10px;
+      font-size: 9px;
       color: var(--muted);
-      padding: 2px 0 4px;
+      padding: 1px 0 3px;
     }
 
     .cal-day {
       aspect-ratio: 1/1;
-      border-radius: 8px;
+      border-radius: 6px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 11px;
+      font-size: 10px;
       color: #7a6060;
       cursor: pointer;
       position: relative;
@@ -458,7 +458,7 @@
     .record-row-main { flex: 1; min-width: 0; }
 
     .record-row-title {
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 700;
       color: var(--accent-deep);
       margin-bottom: 2px;
@@ -982,7 +982,7 @@
         <span class="list-head-title">书架</span>
         <div style="display:flex;align-items:center;gap:8px;">
           <div id="filterIndicator"></div>
-          <button class="btn-danger btn-sm" id="btnClearAllTags" title="清空所有记录的标签">清空全部标签</button>
+
         </div>
       </div>
       <div id="recordsList"></div>
@@ -1232,7 +1232,8 @@
     }
 
     const totalWords = allRecords.reduce((sum, r) => sum + (r.story_summary||'').length + (r.notes||'').length, 0);
-    const wordLabel = totalWords >= 10000 ? (totalWords/10000).toFixed(1)+'万' : totalWords+'字';
+    const wordNum = totalWords >= 10000 ? (totalWords/10000).toFixed(1)+'万' : String(totalWords);
+    const wordLabel = wordNum + ' 字';
 
     const now = new Date();
     const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -1757,21 +1758,6 @@
     if (card && !t.dataset.edit && !t.dataset.delete && !t.dataset.copy) {
       showActionSheet(card.dataset.id);
     }
-  });
-
-  document.getElementById('btnClearAllTags').addEventListener('click', async () => {
-    if (!currentUser) return;
-    if (!confirm(`确认清空所有 ${allRecords.length} 条记录的标签？此操作不可撤销。`)) return;
-    const btn = document.getElementById('btnClearAllTags');
-    btn.disabled = true; btn.textContent = '清空中…';
-    let ok = 0, fail = 0;
-    for (const r of allRecords) {
-      const { error } = await supabase.from('spirit_records').update({ tags: [] }).eq('id', r.id).eq('user_id', currentUser.id);
-      error ? fail++ : ok++;
-    }
-    btn.disabled = false; btn.textContent = '清空全部标签';
-    alert(fail ? `完成：${ok} 条成功，${fail} 条失败` : `✓ 已清空全部 ${ok} 条记录的标签`);
-    await fetchRecords();
   });
 
   bootstrap();
