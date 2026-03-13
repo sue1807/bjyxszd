@@ -1033,6 +1033,7 @@
       .dashboard-row { grid-template-columns: 1fr 1fr; gap: 8px; }
       .records-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
       .grid-2 { grid-template-columns: 1fr; }
+      .grid-2.form-grid { grid-template-columns: 1fr 1fr; }
       .modal-body { padding: 14px; }
       .modal-head { padding: 14px; }
       .book-overlay { display: none; }
@@ -1180,7 +1181,7 @@
         <input id="name" type="text" placeholder="作品名称" />
       </div>
 
-      <div class="grid-2">
+      <div class="grid-2 form-grid">
         <div class="field">
           <label for="type">类型</label>
           <select id="type"></select>
@@ -1191,7 +1192,7 @@
         </div>
       </div>
 
-      <div class="grid-2" id="blExtraWrap">
+      <div class="grid-2 form-grid" id="blExtraWrap">
         <div class="field">
           <label for="author">作者</label>
           <input id="author" type="text" placeholder="作者名" />
