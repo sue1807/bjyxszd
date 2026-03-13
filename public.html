@@ -218,7 +218,7 @@
           const nickname = profiles[r.user_id] || '匿名';
           const tagsHtml = (r.tags||[]).map(t => `<span class="meta-tag-sm">${esc(t)}</span>`).join('');
           return `<div class="user-row">
-            <span class="meta-rating">★ ${r.rating}</span>
+            <span class="meta-rating">★ ${r.rating} · ${getRatingLabel(r.rating)}</span>
             <span class="record-nickname" style="flex-shrink:0;">&nbsp;${esc(nickname)}</span>
             <span class="user-row-tags">${tagsHtml}</span>
             ${r.review_date ? `<span class="record-date-right" style="flex-shrink:0;">${r.review_date}</span>` : ''}
