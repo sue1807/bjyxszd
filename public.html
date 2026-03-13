@@ -227,7 +227,7 @@
             <span class="meta-rating">★ ${r.rating} · ${getRatingLabel(r.rating)}</span>
             <span class="record-nickname" style="flex-shrink:0;">&nbsp;${esc(nickname)}${hasReview ? ' 💬' : ''}</span>
             <span class="user-row-tags">${tagsHtml}</span>
-            ${r.review_date ? `<span class="record-date-right" style="flex-shrink:0;">${r.review_date}</span>` : ''}
+            ${r.review_date ? `<span class="record-date-right" style="flex-shrink:0;">${r.review_date.slice(0,7)}</span>` : ''}
           </div>${hasReview ? `<div class="quick-review">${esc(r.quick_review)}</div>` : ''}`;
         }).join('');
         return `<div class="record-row">

@@ -1584,9 +1584,9 @@
             </div>
             <div class="record-row-line2">
               <span class="meta-rating">★ ${r.rating} · ${getRatingLabel(r.rating)}</span>
-              ${date ? `<span class="meta-tag">📅 ${date}</span>` : ''}
+              
               ${wordStr ? `<span class="meta-tag">✍️ ${wordStr}</span>` : ''}
-              ${r.is_public ? `<span title="已公开" style="font-size:13px;color:var(--muted);margin-left:2px;">👁</span>` : ''}
+              ${r.is_public ? `<span title="已公开" style="font-size:10px;color:#cbb8b5;margin-left:2px;vertical-align:middle;">👁</span>` : ''}
             </div>
             ${tagsHtml ? `<div class="record-row-bottom"><div class="record-row-tags">${tagsHtml}</div><div class="record-row-actions"><button class="btn-ghost btn-sm" data-view="${r.id}">查看</button><button class="btn-secondary btn-sm" data-edit="${r.id}">编辑</button></div></div>` : `<div class="record-row-bottom"><div></div><div class="record-row-actions"><button class="btn-ghost btn-sm" data-view="${r.id}">查看</button><button class="btn-secondary btn-sm" data-edit="${r.id}">编辑</button></div></div>`}
           </div>
