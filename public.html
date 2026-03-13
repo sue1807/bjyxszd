@@ -68,8 +68,11 @@
     .meta-rating { font-size: 11px; font-weight: 600; color: var(--accent); }
     .record-row-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
     .record-nickname { font-size: 10px; color: var(--muted); }
-    .record-row-line2 { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 3px 0; }
-    .record-date-right { margin-left: auto; }
+    .record-row-line2 { display: flex; flex-wrap: nowrap; gap: 4px; align-items: center; margin: 2px 0; }
+    .record-date-right { margin-left: auto; font-size: 10px; color: var(--muted); }
+    .user-row { display: flex; align-items: center; flex-wrap: nowrap; gap: 4px; padding: 2px 0; }
+    .user-row-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+    .meta-tag-sm { font-size: 10px; padding: 1px 5px; border-radius: 20px; background: #f5eeeb; color: #b89890; }
 
     .empty-state { padding: 48px 20px; text-align: center; color: var(--muted); }
     .empty-state-icon { font-size: 40px; margin-bottom: 10px; }
@@ -197,33 +200,33 @@
       return;
     }
 
-    // Group by name+author
-    const groups = [];
-    const seen = {};
+    // Group by book name (unique key)
+    const groupMap = new Map();
     paged.forEach(r => {
-      const key = (r.name||'') + '|' + (r.author||'');
-      if (!seen[key]) { seen[key] = groups.length; groups.push({...r, ratings: []}); }
-      groups[seen[key]].ratings.push(r);
+      const key = (r.name||'').trim();
+      if (!groupMap.has(key)) groupMap.set(key, { base: r, users: [] });
+      groupMap.get(key).users.push(r);
     });
+    const groups = [...groupMap.values()];
 
     document.getElementById('recordsList').innerHTML = `
       <div>${groups.map(g => {
-        const icon = TYPE_ICONS[g.type] || '📌';
-        const firstWithTags = g.ratings.find(r => r.tags?.length) || g;
-        const tagsHtml = (firstWithTags.tags||[]).map(t => `<span class="meta-tag">${esc(t)}</span>`).join('');
-        const authorStr = [g.author, g.main_characters].filter(Boolean).map(s => esc(s)).join(' · ');
-        const ratingsHtml = g.ratings.map(r => {
+        const b = g.base;
+        const icon = TYPE_ICONS[b.type] || '📌';
+        const authorStr = [b.author, b.main_characters].filter(Boolean).map(s => esc(s)).join(' · ');
+        const usersHtml = g.users.map(r => {
           const nickname = profiles[r.user_id] || '匿名';
-          return `<div class="record-row-line2">
-            <span class="meta-rating">★ ${r.rating} · ${getRatingLabel(r.rating)}</span>
-            <span class="record-nickname">&nbsp;${esc(nickname)}</span>
-            ${r.review_date ? `<span class="meta-tag" style="margin-left:auto;">📅 ${r.review_date}</span>` : ''}
+          const tagsHtml = (r.tags||[]).map(t => `<span class="meta-tag-sm">${esc(t)}</span>`).join('');
+          return `<div class="user-row">
+            <span class="meta-rating">★ ${r.rating}</span>
+            <span class="record-nickname" style="flex-shrink:0;">&nbsp;${esc(nickname)}</span>
+            <span class="user-row-tags">${tagsHtml}</span>
+            ${r.review_date ? `<span class="record-date-right" style="flex-shrink:0;">${r.review_date}</span>` : ''}
           </div>`;
         }).join('');
         return `<div class="record-row">
-          <div class="record-row-title">${icon} ${esc(g.name)}${authorStr ? `<span class="record-sub">${authorStr}</span>` : ''}</div>
-          ${ratingsHtml}
-          ${tagsHtml ? `<div class="record-row-tags">${tagsHtml}</div>` : ''}
+          <div class="record-row-title">${icon} ${esc(b.name)}${authorStr ? `<span class="record-sub">${authorStr}</span>` : ''}</div>
+          ${usersHtml}
         </div>`;
       }).join('')}</div>
       ${totalPages > 1 ? `<div class="pagination">
