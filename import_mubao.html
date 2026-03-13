@@ -136,11 +136,8 @@
 
       const fullNote = noteDivs.join('\n').trim();
 
-      // Extract tags: first line before 的/是/，/。 split by /
-      const firstLine = fullNote.split('\n')[0] || '';
-      const tagPart = firstLine.split('，')[0] || firstLine.split('。')[0] || '';
-      const rawTags = tagPart.split('/').map(s => s.replace(/[❤️💕🌙✨]/g, '').trim()).filter(s => s.length >= 1 && s.length <= 10);
-      const tags = rawTags.slice(0, 8);
+      // Do not auto-extract tags from notes to avoid false positives
+      const tags = [];
 
       if (!name) continue;
 
