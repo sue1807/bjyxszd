@@ -1278,9 +1278,9 @@
 
     els.statsOverview.innerHTML = `
       <div class="stat-kpi-row">
-        <div class="stat-kpi">
-          <span class="stat-kpi-label">本月阅读</span>
-          <span class="stat-kpi-num">${monthCount}</span>
+        <div class="stat-kpi" data-monthfilter="${thisMonth}" style="cursor:pointer;">
+          <span class="stat-kpi-label" style="pointer-events:none;">本月记录</span>
+          <span class="stat-kpi-num" style="pointer-events:none;">${monthCount}</span>
         </div>
         <div class="stat-kpi">
           <span class="stat-kpi-label">累计书写</span>
