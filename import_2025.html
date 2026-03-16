@@ -75,7 +75,7 @@
 
   <div style="margin-top:14px;"><a href="index.html" class="back">← 返回书架</a></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 <script src="config.js"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -254,11 +254,20 @@ async function handleFile(file) {
   const year = yearM ? yearM[0] : new Date().getFullYear().toString();
 
   // Read docx with mammoth
-  const arrayBuffer = await file.arrayBuffer();
-  const result = await mammoth.extractRawText({ arrayBuffer });
-  const lines = result.value.split('\n').filter(l => l.trim());
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    if (typeof mammoth === 'undefined') {
+      document.getElementById('statusBox').textContent = '❌ 解析库加载失败，请检查网络后刷新重试';
+      return;
+    }
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    const lines = result.value.split('\n').filter(l => l.trim());
 
-  parsedData = parseLines(lines, year);
+    parsedData = parseLines(lines, year);
+  } catch(err) {
+    document.getElementById('statusBox').textContent = '❌ 解析失败：' + err.message;
+    return;
+  }
 
   // Load existing names
   const { data } = await supabase.from('spirit_records').select('name').eq('user_id', currentUser.id);
