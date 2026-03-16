@@ -42,7 +42,7 @@
       <div class="upload-icon">📄</div>
       <div class="upload-label">选择 .docx 文件</div>
       <div class="upload-hint" style="margin-bottom:12px;">支持 2023 / 2024 / 2025 等年度格式</div>
-      <input type="file" id="fileInput" accept=".docx" onchange="handleFile(this.files[0])"
+      <input type="file" id="fileInput" accept=".docx" id="fileInputEl"
         style="display:block;margin:0 auto;font-size:14px;color:var(--accent-deep);max-width:200px;"/>
     </div>
     <ul class="tip" style="margin-top:12px;">
@@ -84,9 +84,20 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </script>
 <script src="config.js"></script>
 
-<script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-const supabase = createClient(window.APP_CONFIG?.SUPABASE_URL||'', window.APP_CONFIG?.SUPABASE_ANON_KEY||'');
+<script>
+(async () => {
+  try {
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    window._supabase = createClient(window.APP_CONFIG?.SUPABASE_URL||'', window.APP_CONFIG?.SUPABASE_ANON_KEY||'');
+  } catch(e) {
+    document.getElementById('statusBox').textContent = '❌ 网络连接失败，无法连接数据库';
+    return;
+  }
+
+const supabase = window._supabase;
+document.getElementById('fileInputEl')?.addEventListener('change', e => {
+  if (e.target.files[0]) handleFile(e.target.files[0]);
+});
 
 
 
@@ -316,6 +327,8 @@ init();
 
 
 
+
+})();
 </script>
 </body>
 </html>
