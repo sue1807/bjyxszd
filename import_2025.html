@@ -38,12 +38,12 @@
   <h1>📥 导入读书记录</h1>
   <p class="sub">上传幕布导出的 Word（.docx）文件，自动解析并批量导入</p>
   <div class="card" id="uploadCard">
-    <div class="upload-area" id="uploadArea">
+    <label for="fileInput" class="upload-area" id="uploadArea" style="display:block;cursor:pointer;">
       <input type="file" id="fileInput" accept=".docx" style="display:none"/>
       <div class="upload-icon">📄</div>
       <div class="upload-label">点击选择 .docx 文件</div>
       <div class="upload-hint">支持 2023 / 2024 / 2025 等年度格式，自动识别结构</div>
-    </div>
+    </label>
     <ul class="tip" style="margin-top:12px;">
       <li>文件结构：月份标题（Jan./Feb.…）或直接编号书名</li>
       <li>自动识别 20+ 类标签：种田/穿越/重生/ABO/骨科/玄幻/娱乐圈…</li>
@@ -174,7 +174,6 @@ async function init(){
 
 const fileInput=document.getElementById('fileInput');
 const uploadArea=document.getElementById('uploadArea');
-uploadArea.addEventListener('click',()=>fileInput.click());
 uploadArea.addEventListener('dragover',e=>{e.preventDefault();uploadArea.classList.add('drag');});
 uploadArea.addEventListener('dragleave',()=>uploadArea.classList.remove('drag'));
 uploadArea.addEventListener('drop',e=>{e.preventDefault();uploadArea.classList.remove('drag');handleFile(e.dataTransfer.files[0]);});
