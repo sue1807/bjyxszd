@@ -38,12 +38,12 @@
   <h1>📥 导入读书记录</h1>
   <p class="sub">上传幕布导出的 Word（.docx）文件，自动解析并批量导入</p>
   <div class="card" id="uploadCard">
-    <div class="upload-area" id="uploadArea" style="position:relative;cursor:pointer;">
-      <input type="file" id="fileInput" accept=".docx" onchange="window._handleFile(this.files[0])"
-        style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:2;"/>
+    <div class="upload-area" id="uploadArea">
       <div class="upload-icon">📄</div>
-      <div class="upload-label">点击选择 .docx 文件</div>
-      <div class="upload-hint">支持 2023 / 2024 / 2025 等年度格式，自动识别结构</div>
+      <div class="upload-label">选择 .docx 文件</div>
+      <div class="upload-hint" style="margin-bottom:12px;">支持 2023 / 2024 / 2025 等年度格式</div>
+      <input type="file" id="fileInput" accept=".docx" onchange="window._handleFile(this.files[0])"
+        style="display:block;margin:0 auto;font-size:14px;color:var(--accent-deep);max-width:200px;"/>
     </div>
     <ul class="tip" style="margin-top:12px;">
       <li>文件结构：月份标题（Jan./Feb.…）或直接编号书名</li>
