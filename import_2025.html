@@ -236,13 +236,36 @@ document.getElementById('btnImport').addEventListener('click',async()=>{
   let done=0,errors=0;
   for(const r of toImport){
     const idx=parsedData.indexOf(r);
-    document.getElementById(`st_${idx}`).textContent='导入中…';
-    const{error}=await supabase.from('spirit_records').insert({
+    document.getElementById('st_'+idx).textContent='导入中…';
+    const payload={
       name:r.name,author:r.author||null,main_characters:r.main_characters||null,
       review_date:r.review_date,type:r.type,rating:r.rating||0,
-      tags:r.tags?.length?r.tags:null,story_summary:r.story_summary||null,
-      notes:r.notes||null,is_public:false,user_id:currentUser.id
-    });
+      tags:r.tags&&r.tags.length?r.tags:null,
+      story_summary:r.story_summary?r.story_summary.slice(0,500):null,
+      notes:r.notes?r.notes.slice(0,2000):null,
+      is_public:false,user_id:currentUser.id
+    };
+    let success=false;
+    for(let attempt=0;attempt<3;attempt++){
+      if(attempt>0) await new Promise(x=>setTimeout(x,2000));
+      const res=await supabase.from('spirit_records').insert(payload);
+      if(!res.error){success=true;break;}
+      if(attempt===2) document.getElementById('st_'+idx).textContent='x '+(res.error.message||res.error.code||'失败');
+    }
+    if(success){
+      document.getElementById('st_'+idx).textContent='OK';
+      document.getElementById('row_'+idx).className='done';
+      existingNames.add(r.name);done++;
+    }else{
+      document.getElementById('row_'+idx).className='error';errors++;
+    }
+    document.getElementById('progressFill').style.width=Math.round((done+errors)/toImport.length*100)+'%';
+    document.getElementById('statusBox').textContent='已导入 '+done+' 条，失败 '+errors+' 条，共 '+toImport.length+' 条';
+    await new Promise(x=>setTimeout(x,800));
+  }
+  document.getElementById('statusBox').textContent='完成！成功 '+done+' 条，失败 '+errors+' 条';
+  document.getElementById('btnImport').disabled=false;
+});
     if(error){document.getElementById(`st_${idx}`).textContent='❌ '+( error.message||error.code||'失败');document.getElementById(`row_${idx}`).className='error';errors++;console.error(r.name, error);}
     else{document.getElementById(`st_${idx}`).textContent='✅ 完成';document.getElementById(`row_${idx}`).className='done';existingNames.add(r.name);done++;}
     document.getElementById('progressFill').style.width=Math.round((done+errors)/toImport.length*100)+'%';
