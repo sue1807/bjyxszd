@@ -1133,7 +1133,7 @@
             <button class="cal-nav-btn" id="calPrev">‹</button>
             <span class="cal-month-label" id="calMonthLabel" style="display:flex;align-items:center;gap:2px;">
               <select id="calYearSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:66%;"></select>
-              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:34%;"></select>
+              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:34%;text-align:center;"></select>
             </span>
             <button class="cal-nav-btn" id="calNext">›</button>
           </div>
@@ -1146,7 +1146,7 @@
     <!-- Records -->
     <div class="list-panel">
       <div class="list-head">
-        <span class="list-head-title">我的书架</span>
+        <span class="list-head-title" id="listTitle">我的书架</span><span id="listCount" style="font-size:12px;color:var(--muted);margin-left:6px;font-weight:300;"></span>
         <div style="display:flex;align-items:center;gap:8px;">
           <div id="filterIndicator"></div>
 
@@ -1571,6 +1571,8 @@
     els.filterIndicator.innerHTML = pills.join('');
 
     currentPage = Math.min(currentPage, Math.ceil(filtered.length / PAGE_SIZE) || 1);
+    const countEl = document.getElementById('listCount');
+    if (countEl) countEl.textContent = `(${filtered.length})`;
     const pageStart = (currentPage - 1) * PAGE_SIZE;
     const paged = filtered.slice(pageStart, pageStart + PAGE_SIZE);
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
