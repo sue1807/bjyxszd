@@ -1097,7 +1097,7 @@
     <div class="header-inner">
       <div class="brand">
         <span class="brand-icon">📚</span>
-        <span class="brand-name">五谷丰登</span>
+        <span class="brand-name" id="btnAbout" style="cursor:pointer;" title="关于">五谷丰登</span>
       </div>
       <div class="header-right">
         <span class="user-badge" id="userEmail">-</span>
@@ -1133,7 +1133,7 @@
             <button class="cal-nav-btn" id="calPrev">‹</button>
             <span class="cal-month-label" id="calMonthLabel" style="display:flex;align-items:center;gap:2px;">
               <select id="calYearSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:66%;"></select>
-              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:34%;text-align:center;"></select>
+              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:34%;"></select>
             </span>
             <button class="cal-nav-btn" id="calNext">›</button>
           </div>
@@ -2107,11 +2107,77 @@
     }
   });
 
+  // About dialog
+
+  document.getElementById('btnCloseAbout')?.addEventListener('click', () => {
+    document.getElementById('aboutDialog').close();
+  });
+  document.getElementById('aboutDialog')?.addEventListener('click', e => {
+    if (e.target === e.currentTarget) e.currentTarget.close();
+  });
+
+  // CSV export
+  document.getElementById('btnExportCSV')?.addEventListener('click', () => {
+    if (!allRecords.length) return alert('暂无数据');
+    const cols = ['name','type','author','main_characters','rating','review_date','tags','personal_review','story_summary','notes','is_public','created_at'];
+    const headers = ['书名','类型','作者','主角','综合评分','阅读日期','标签','锐评','故事梗概','读后感','是否公开','创建时间'];
+    const rows = allRecords.map(r => cols.map(c => {
+      let v = r[c] ?? '';
+      if (Array.isArray(v)) v = v.join('、');
+      if (typeof v === 'boolean') v = v ? '是' : '否';
+      return `"${String(v).replace(/"/g,'""')}"`;
+    }).join(','));
+    const csv = '﻿' + headers.join(',') + '
+' + rows.join('
+');
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `五谷丰登_备份_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+  });
+
   bootstrap();
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/bjyxszd/sw.js');
   }
 </script>
+<dialog id="aboutDialog" style="border:none;border-radius:20px;padding:0;max-width:360px;width:92%;box-shadow:0 8px 32px rgba(140,90,80,0.15);">
+  <div style="padding:20px 20px 24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <span style="font-size:17px;font-weight:500;color:var(--accent-deep);">📚 五谷丰登</span>
+      <button id="btnCloseAbout" style="border:none;background:transparent;font-size:18px;color:var(--muted);cursor:pointer;">×</button>
+    </div>
+
+    <div style="font-size:12px;color:var(--muted);line-height:1.9;margin-bottom:18px;">
+      <div style="font-weight:500;color:var(--text);margin-bottom:6px;">使用说明</div>
+      <div>· 点击 <b>+</b> 新增读书记录</div>
+      <div>· 支持类型：BL小说、文学小说、非虚构书籍、广播剧</div>
+      <div>· 三维评分（文笔/情节/人设），自动计算综合分</div>
+      <div>· 标签可自定义，存储在本地</div>
+      <div>· 勾选「公开到公共书架」可让其他用户看到书名/评分/标签</div>
+      <div>· 日历可按日期或月份筛选记录</div>
+      <div>· 草稿自动保存，关闭浏览器后可恢复</div>
+      <div style="margin-top:8px;">· 数据存储在 Supabase 云端，每个账号数据互相隔离</div>
+    </div>
+
+    <div style="border-top:1px solid var(--line);padding-top:14px;">
+      <div style="font-weight:500;color:var(--text);font-size:12px;margin-bottom:8px;">数据备份</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">导出记录为 CSV，可用 Excel 打开</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <select id="exportRange" style="flex:1;padding:7px 8px;border:1.5px solid var(--line);border-radius:10px;font:inherit;font-size:12px;color:var(--text);background:#fff;outline:none;">
+          <option value="all">全部记录</option>
+        </select>
+        <select id="exportYear" style="flex:1;padding:7px 8px;border:1.5px solid var(--line);border-radius:10px;font:inherit;font-size:12px;color:var(--text);background:#fff;outline:none;display:none;">
+        </select>
+        <select id="exportMonth" style="flex:1;padding:7px 8px;border:1.5px solid var(--line);border-radius:10px;font:inherit;font-size:12px;color:var(--text);background:#fff;outline:none;display:none;">
+        </select>
+      </div>
+      <button id="btnExportCSV" style="width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:12px;font:inherit;font-size:13px;cursor:pointer;">⬇ 下载备份 CSV</button>
+    </div>
+  </div>
+</dialog>
+
 </body>
 </html>
