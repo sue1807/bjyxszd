@@ -1132,8 +1132,8 @@
           <div class="cal-nav">
             <button class="cal-nav-btn" id="calPrev">‹</button>
             <span class="cal-month-label" id="calMonthLabel" style="display:flex;align-items:center;gap:2px;">
-              <select id="calYearSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;"></select>
-              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;"></select>
+              <select id="calYearSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:66%;"></select>
+              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:34%;"></select>
             </span>
             <button class="cal-nav-btn" id="calNext">›</button>
           </div>
@@ -2022,13 +2022,32 @@
   els.originalIntroFile.addEventListener('change', e => { const f = e.target.files?.[0]; if (f) uploadImage(f); });
 
 
+  document.getElementById('calYearSelect')?.addEventListener('change', e => {
+    calYear = parseInt(e.target.value);
+    selectedDateFilter = '';
+    const mk = `${calYear}-${String(calMonth).padStart(2,'0')}`;
+    selectedMonthFilter = mk;
+    currentPage = 1; renderCalendar(); renderRecords();
+  });
+  document.getElementById('calMonthSelect')?.addEventListener('change', e => {
+    calMonth = parseInt(e.target.value);
+    selectedDateFilter = '';
+    const mk = `${calYear}-${String(calMonth).padStart(2,'0')}`;
+    selectedMonthFilter = mk;
+    currentPage = 1; renderCalendar(); renderRecords();
+  });
+
   els.calPrev.addEventListener('click', () => {
     calMonth--; if (calMonth < 1) { calMonth = 12; calYear--; }
-    selectedDateFilter = ''; renderCalendar(); renderRecords();
+    selectedDateFilter = '';
+    selectedMonthFilter = `${calYear}-${String(calMonth).padStart(2,'0')}`;
+    currentPage = 1; renderCalendar(); renderRecords();
   });
   els.calNext.addEventListener('click', () => {
     calMonth++; if (calMonth > 12) { calMonth = 1; calYear++; }
-    selectedDateFilter = ''; renderCalendar(); renderRecords();
+    selectedDateFilter = '';
+    selectedMonthFilter = `${calYear}-${String(calMonth).padStart(2,'0')}`;
+    currentPage = 1; renderCalendar(); renderRecords();
   });
 
   ['name','reviewDate','author','mainCharacters','summary','notes'].forEach(k => {
