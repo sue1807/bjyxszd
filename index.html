@@ -1132,8 +1132,8 @@
           <div class="cal-nav">
             <button class="cal-nav-btn" id="calPrev">‹</button>
             <span class="cal-month-label" id="calMonthLabel" style="display:flex;align-items:center;gap:2px;">
-              <select id="calYearSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:66%;"></select>
-              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:34%;"></select>
+              <select id="calYearSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;min-width:72px;"></select>
+              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;min-width:48px;"></select>
             </span>
             <button class="cal-nav-btn" id="calNext">›</button>
           </div>
@@ -2133,6 +2133,24 @@
     a.href = URL.createObjectURL(blob);
     a.download = `五谷丰登_备份_${new Date().toISOString().slice(0,10)}.csv`;
     a.click();
+  });
+
+  // About dialog open
+  document.getElementById('btnAbout')?.addEventListener('click', () => {
+    const years = [...new Set(allRecords.map(r => r.review_date?.slice(0,4)).filter(Boolean))].sort().reverse();
+    const rangeSel = document.getElementById('exportRange');
+    if (rangeSel) {
+      rangeSel.innerHTML = '<option value="all">全部记录</option>' +
+        years.map(y => `<option value="year_${y}">${y}年</option>`).join('') +
+        years.map(y => Array.from({length:12},(_,i)=>`<option value="month_${y}_${i+1}">${y}年${i+1}月</option>`).join('')).join('');
+    }
+    document.getElementById('aboutDialog').showModal();
+  });
+  document.getElementById('btnCloseAbout')?.addEventListener('click', () => {
+    document.getElementById('aboutDialog').close();
+  });
+  document.getElementById('aboutDialog')?.addEventListener('click', e => {
+    if (e.target === e.currentTarget) e.currentTarget.close();
   });
 
   bootstrap();
