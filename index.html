@@ -1133,8 +1133,8 @@
           <div class="cal-nav">
             <button class="cal-nav-btn" id="calPrev">‹</button>
             <span class="cal-month-label" id="calMonthLabel" style="display:flex;align-items:center;gap:2px;width:140px;">
-              <select id="calYearSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:88px;"></select>
-              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:50px;"></select>
+              <select id="calYearSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:80px;"></select>
+              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:12px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:64px;"></select>
             </span>
             <button class="cal-nav-btn" id="calNext">›</button>
           </div>
@@ -1516,7 +1516,7 @@
       const currentYear = String(calYear);
       if (!years.includes(currentYear)) years.push(currentYear);
       years.sort();
-      yearSel.innerHTML = years.map(y => `<option value="${y}" ${y===currentYear?'selected':''} style="color:var(--text);background:#fff;">${y}</option>`).join('');
+      yearSel.innerHTML = years.map(y => `<option value="${y}" ${y===currentYear?'selected':''} style="color:var(--text);background:#fff;">${y}年</option>`).join('');
       monthSel.innerHTML = Array.from({length:12},(_,i)=>{
         const m = i+1;
         return `<option value="${m}" ${m===calMonth?'selected':''} style="color:var(--text);background:#fff;">${m}月</option>`;
