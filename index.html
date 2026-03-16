@@ -2116,6 +2116,9 @@
   document.getElementById('aboutDialog')?.addEventListener('click', e => {
     if (e.target === e.currentTarget) e.currentTarget.close();
   });
+  document.getElementById('btnGoImport')?.addEventListener('click', () => {
+    window.location.href = 'import_2025.html';
+  });
 
   // CSV export
   document.getElementById('btnExportCSV')?.addEventListener('click', () => {
@@ -2192,6 +2195,11 @@
         </select>
       </div>
       <button id="btnExportCSV" style="width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:12px;font:inherit;font-size:13px;cursor:pointer;">⬇ 下载备份 CSV</button>
+      <div style="border-top:1px solid var(--line);padding-top:14px;margin-top:14px;">
+        <div style="font-weight:500;color:var(--text);font-size:12px;margin-bottom:8px;">导入记录</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">从解析好的文件批量导入，自动跳过已存在的书名</div>
+        <button id="btnGoImport" style="width:100%;padding:10px;background:#f5eeeb;color:var(--accent-deep);border:none;border-radius:12px;font:inherit;font-size:13px;cursor:pointer;">📥 前往导入页面</button>
+      </div>
     </div>
   </div>
 </dialog>
