@@ -243,11 +243,32 @@ document.getElementById('btnImport').addEventListener('click',async()=>{
       tags:r.tags?.length?r.tags:null,story_summary:r.story_summary||null,
       notes:r.notes||null,is_public:false,user_id:currentUser.id
     });
-    if(error){document.getElementById(`st_${idx}`).textContent='❌ 失败';document.getElementById(`row_${idx}`).className='error';errors++;}
+    if(error){document.getElementById(`st_${idx}`).textContent='❌ '+( error.message||error.code||'失败');document.getElementById(`row_${idx}`).className='error';errors++;console.error(r.name, error);}
     else{document.getElementById(`st_${idx}`).textContent='✅ 完成';document.getElementById(`row_${idx}`).className='done';existingNames.add(r.name);done++;}
     document.getElementById('progressFill').style.width=Math.round((done+errors)/toImport.length*100)+'%';
     document.getElementById('statusBox').textContent=`已导入 ${done} 条，失败 ${errors} 条，共 ${toImport.length} 条`;
-    await new Promise(r=>setTimeout(r,150));
+    await new Promise(r=>setTimeout(r,400));
+  }
+  // Retry failed ones once
+  if(errors > 0){
+    document.getElementById('statusBox').textContent=`重试失败的 ${errors} 条…`;
+    const retryRows = [...document.querySelectorAll('tr.error')];
+    let retried = 0;
+    for(const row of retryRows){
+      const idx = parseInt(row.id.replace('row_',''));
+      const r = parsedData[idx];
+      await new Promise(x=>setTimeout(x,600));
+      const{error}=await supabase.from('spirit_records').insert({
+        name:r.name,author:r.author||null,main_characters:r.main_characters||null,
+        review_date:r.review_date,type:r.type,rating:r.rating||0,
+        tags:r.tags?.length?r.tags:null,story_summary:r.story_summary||null,
+        notes:r.notes||null,is_public:false,user_id:currentUser.id
+      });
+      if(!error){
+        document.getElementById(`st_${idx}`).textContent='✅ 重试成功';
+        row.className='done'; done++; errors--; retried++;
+      }
+    }
   }
   document.getElementById('statusBox').textContent=`✅ 完成！成功 ${done} 条，失败 ${errors} 条`;
   document.getElementById('btnImport').disabled=false;
