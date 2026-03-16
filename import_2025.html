@@ -3,823 +3,331 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>导入2025年记录 · 五谷丰登</title>
+  <title>导入记录 · 五谷丰登</title>
   <style>
-    :root { --accent: #c9847a; --accent-deep: #b06b62; --bg: #f7f3ee; --card: #fff; --muted: #a08880; --line: #ead8d0; --text: #3d2f2d; }
+    :root { --accent: #c9847a; --accent-deep: #b06b62; --bg: #f7f3ee; --muted: #a08880; --line: #ead8d0; --text: #3d2f2d; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: "PingFang SC", sans-serif; background: var(--bg); color: var(--text); padding: 20px; max-width: 760px; margin: 0 auto; }
-    h1 { color: var(--accent-deep); font-size: 20px; margin-bottom: 6px; }
-    .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
-    .status { background: #fff; border-radius: 12px; border: 1px solid var(--line); padding: 14px 16px; margin-bottom: 16px; font-size: 13px; line-height: 1.8; }
-    .progress-bar { height: 6px; background: #f0e8e5; border-radius: 3px; margin: 10px 0; }
-    .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .3s; }
-    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); font-size: 12px; }
+    body { font-family: "PingFang SC", sans-serif; background: var(--bg); color: var(--text); padding: 20px; max-width: 820px; margin: 0 auto; }
+    h1 { color: var(--accent-deep); font-size: 20px; margin-bottom: 4px; }
+    .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+    .card { background: #fff; border-radius: 14px; border: 1px solid var(--line); padding: 16px; margin-bottom: 14px; }
+    .upload-area { border: 2px dashed var(--line); border-radius: 12px; padding: 28px; text-align: center; cursor: pointer; transition: .2s; }
+    .upload-area:hover, .upload-area.drag { border-color: var(--accent); background: #fdf7f5; }
+    .upload-icon { font-size: 32px; margin-bottom: 8px; }
+    .upload-label { font-size: 14px; color: var(--accent-deep); font-weight: 500; }
+    .upload-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .status { font-size: 13px; line-height: 1.8; }
+    .progress-bar { height: 6px; background: #f0e8e5; border-radius: 3px; margin: 8px 0; }
+    .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width .3s; width: 0%; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
     th { background: #fdf0ec; padding: 8px 10px; text-align: left; color: var(--accent-deep); font-weight: 500; }
-    td { padding: 7px 10px; border-top: 1px solid #f5eeeb; vertical-align: top; }
-    tr.skip td { color: #bbb; background: #fafafa; }
-    tr.done td { color: #888; background: #f9fdf9; }
+    td { padding: 6px 10px; border-top: 1px solid #f5eeeb; vertical-align: top; }
+    tr.skip td { color: #bbb; }
+    tr.done td { color: #999; background: #f9fdf9; }
     tr.error td { background: #fff5f5; color: #c00; }
-    .tag { display: inline-block; background: #f5eeeb; color: var(--accent-deep); border-radius: 20px; padding: 1px 7px; font-size: 10px; margin: 1px; }
-    .btn { padding: 10px 24px; border-radius: 12px; border: none; cursor: pointer; font-size: 14px; font-family: inherit; }
+    .tag { display: inline-block; background: #f5eeeb; color: var(--accent-deep); border-radius: 20px; padding: 1px 6px; font-size: 10px; margin: 1px; }
+    .btn { padding: 9px 20px; border-radius: 11px; border: none; cursor: pointer; font-size: 13px; font-family: inherit; transition: .15s; }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-primary:disabled { opacity: 0.5; cursor: default; }
-    .btn-secondary { background: #f5eeeb; color: var(--accent-deep); margin-left: 8px; }
-    .actions { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
-    .badge { font-size: 11px; background: #fff0ee; color: var(--accent); padding: 3px 8px; border-radius: 20px; }
+    .btn-ghost { background: #f5eeeb; color: var(--accent-deep); }
+    .actions { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+    .badge { font-size: 11px; background: #fff0ee; color: var(--accent); padding: 3px 9px; border-radius: 20px; }
+    .hidden { display: none !important; }
+    .tip { font-size: 11px; color: var(--muted); line-height: 1.8; padding-left: 14px; }
+    .tip li { margin-bottom: 2px; }
+    a.back { font-size: 13px; color: var(--muted); text-decoration: none; }
   </style>
 </head>
 <body>
-  <h1>📚 导入 2025 年读书记录</h1>
-  <p class="sub">共解析到 50 条记录，将自动跳过书名已存在的条目</p>
+  <h1>📥 导入读书记录</h1>
+  <p class="sub">支持幕布导出的 Word（.docx）文件，自动解析并批量导入</p>
 
-  <div class="status" id="statusBox">
-    <div>请先登录，然后点击「开始导入」</div>
-    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-    <div id="statusText" style="color:var(--muted);font-size:12px;">等待中…</div>
+  <div class="card" id="uploadCard">
+    <div class="upload-area" id="uploadArea">
+      <input type="file" id="fileInput" accept=".docx" style="display:none" />
+      <div class="upload-icon">📄</div>
+      <div class="upload-label">点击选择 .docx 文件</div>
+      <div class="upload-hint">支持 2023 / 2024 / 2025 等年度格式，自动识别结构</div>
+    </div>
+    <ul class="tip" style="margin-top:12px;">
+      <li>文件结构：月份标题（Jan./Feb.…）或直接编号书名</li>
+      <li>自动识别 20+ 类标签：种田/穿越/重生/ABO/骨科/玄幻/娱乐圈…</li>
+      <li>2024格式支持从书名 ⭐️ 数量自动换算评分</li>
+      <li>已存在的书名自动跳过</li>
+    </ul>
   </div>
 
-  <div class="actions">
-    <button class="btn btn-primary" id="btnImport" onclick="startImport()">开始导入</button>
-    <button class="btn btn-secondary" onclick="window.location.href='index.html'">返回书架</button>
-    <span class="badge" id="countBadge">-</span>
+  <div class="card hidden" id="previewCard">
+    <div class="status" id="statusBox" style="color:var(--muted);">解析中…</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="actions hidden" id="actionBar">
+      <button class="btn btn-primary" id="btnImport">开始导入</button>
+      <button class="btn btn-ghost" id="btnReset">重新上传</button>
+      <span class="badge" id="countBadge"></span>
+    </div>
+    <div style="overflow-x:auto;margin-top:8px;">
+      <table>
+        <thead><tr><th>#</th><th>书名</th><th>作者 · 主角</th><th>日期</th><th>评分</th><th>标签</th><th>状态</th></tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
   </div>
 
-  <table>
-    <thead>
-      <tr><th>#</th><th>书名</th><th>作者·主角</th><th>月份</th><th>标签</th><th>状态</th></tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
+  <div style="margin-top:14px;"><a href="index.html" class="back">← 返回书架</a></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script src="config.js"></script>
 <script type="module">
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const supabase = createClient(window.APP_CONFIG?.SUPABASE_URL||'', window.APP_CONFIG?.SUPABASE_ANON_KEY||'');
 
-const SUPABASE_URL = window.APP_CONFIG?.SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = window.APP_CONFIG?.SUPABASE_ANON_KEY || '';
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ── TAG KEYWORDS ──
+const TAG_KW = {
+  '种田':['种田','田园','务农','发家致富','种地'],
+  '穿越':['穿越','穿到','穿身','魂穿','穿书'],
+  '重生':['重生','上一世','前世','上辈子','读档','循环'],
+  '现代':['现代','都市','当代'],
+  '校园':['校园','学校','高中','大学','同桌','同学'],
+  '古代':['古代','朝堂','科举','架空','王朝','皇帝','太子','国公','权谋','纨绔'],
+  '玄幻':['玄幻','修真','修仙','飞升','灵力','丹药','门派','炼器'],
+  'ABO':['abo','哨向','向导','信息素','标记','发情','哥儿'],
+  '骨科':['骨科','亲兄弟','同父','同母'],
+  '星际':['星际','联盟','星舰'],
+  '年代文':['年代','70年代','80年代','90年代','知青'],
+  '娱乐圈':['娱乐圈','明星','idol','艺人','经纪'],
+  '爽文':['爽文','开挂','无敌','发飙','反打'],
+  '甜文':['甜文','日常向','甜蜜'],
+  '虐文':['虐心','心疼','泪目','心痛'],
+  '豪门':['豪门','世家','大佬'],
+  '灵异':['灵异','玄学','棺材','妖孽'],
+  '刑侦':['刑侦','法医','案件','犯罪','推理'],
+  '丧尸':['丧尸','末世','病毒'],
+  '破镜重圆':['破镜重圆','重圆','离婚','分手后'],
+  '年上':['年上','年长'],
+  '年下':['年下','年少'],
+  '无限流':['无限流','副本','游戏'],
+};
 
-const DATA = [
-  {
-    "name": "进京赶考还分配老公吗",
-    "author": "长鼻子狗",
-    "main_characters": "赵宝珠&叶京华",
-    "review_date": "2025-01-01",
-    "type": "BL小说",
-    "tags": [
-      "种田",
-      "古代",
-      "甜文"
-    ],
-    "story_summary": "种田,通篇看完对宝珠的猫儿眼很是喜欢。",
-    "notes": "都说眼睛是心灵的窗户，真的很喜欢眼睛好看的圆溜溜的人儿。天之骄子城府极深肱骨之臣攻，猫儿眼般的寒门学子一心只想报效朝廷受，比较甜朝堂这边不是很深，主要是攻才华横溢深得信任，基本没有被打压被陷害。最后还是有点子无语，太子居然也对宝珠有了强制占有，君臣二人相互的试探，可能在我看过的权谋中都是天家无心居多，皇帝老子对叶京华的好着实超过了我的预期，虽然是想为儿子的朝堂择贤，但太宽容让我一度以为叶京华是皇上的私生子。"
-  },
-  {
-    "name": "纸飞机",
-    "author": "潭石",
-    "main_characters": "汤君赫&杨煊",
-    "review_date": "2025-01-01",
-    "type": "BL小说",
-    "tags": [
-      "骨科",
-      "破镜重圆"
-    ],
-    "story_summary": "真骨科，同父异母亲兄弟，是在真的get到骨科的爱到血液里这个设定后看的第一篇。",
-    "notes": "斯里兰卡的夏天永远炙热。5岁17岁27岁，各自成为彼此阴暗生活的一束光，50%是学生时代，比起破镜重圆我更愿意定义为久别重逢。两人都生长在阴暗面，却是对方为光亮，也为对方点亮一束光。再次被真骨科的血腥味触动，与生俱来，爱进骨髓。十七岁的生日愿望替你许下：希望哥哥杨煊每天都能比弟弟汤君赫过得更好一点。几十封出征前的遗书都是“名下所有财产赠与弟弟汤君赫，这不是爱是什么呢？致敬善良且自由。"
-  },
-  {
-    "name": "青竹",
-    "author": "寓风",
-    "main_characters": "姜竹&沈清越",
-    "review_date": "2025-01-01",
-    "type": "BL小说",
-    "tags": [
-      "种田",
-      "穿越"
-    ],
-    "story_summary": "穿越种田，vv强推，我也很很很喜欢，",
-    "notes": "还好作者申明攻受，不然我也以为我们竹子是受。攻受对彼此都是因为爱你，所以我热爱这个世界，因为看到你我才看到其他人。原住民竹子，穿越者沈先生，群像也很喜欢，大哥大嫂一家的善良和对竹子的爱，四伯家的贪便宜和姜树的聪明。"
-  },
-  {
-    "name": "捡星星",
-    "author": "不问三九",
-    "main_characters": "秦放&刑炎",
-    "review_date": "2025-01-01",
-    "type": "BL小说",
-    "tags": [
-      "现代",
-      "校园",
-      "甜文",
-      "虐文"
-    ],
-    "story_summary": "校园现代，说好的甜文为何虐我。",
-    "notes": "我可以说我喜欢这个作者，燎原三部曲我都很爱。三九的主角很细腻很温暖，是涓涓流水围着绕着，不分攻受，彼此的存在就是那样的恰如其分。我很喜欢秦放的捋一捋，不会在情绪最上头的时候去写答案，但只要他想清楚了认清了自己，那就是又猛又勇的快乐天使，所以从掰弯到使用那张卡，其实是很符合我对秦放的认识。小院里的四个孩子，其实都心疼，包括最嘴贱的周斯明，每次韩小功说他是跟在邢炎和周斯明屁股后长大，我都好难过，太多的故事和现实，让我可以猜到他经历的是什么。前面真的好甜，跟着去踩风去追自由，生日送的原石送的快乐，俩个人就是那样的水到渠成默契至极。后面的虐肝儿疼，你真的是玩家吗，原来一开始你计划的未来就没有我。太心疼星星了。"
-  },
-  {
-    "name": "狼行成双",
-    "author": "巫哲",
-    "main_characters": "边南&邱奕",
-    "review_date": "2025-01-01",
-    "type": "BL小说",
-    "tags": [
-      "现代",
-      "校园",
-      "爽文",
-      "甜文",
-      "虐文"
-    ],
-    "story_summary": "轻校园现代，生活日常向，感觉比解药三伏好看些。",
-    "notes": "很巫哲的细水日常，和撒野一样没有特定的攻受，但技术上来说肯定是邱大宝更娴熟。边南是小三的儿子，被爸爸的家庭“接纳”，爸爸想弥补想平衡，能感受到他是爱边南的，但是不会和儿子相处，阿姨哥哥妹妹其实对他是怨恨的，但大家都只想追求家庭的平静，妹妹在知道自己喜欢的男生居然是同性恋而且还是边南的对象时，喊出来的小偷，很难受很心疼边南；邱奕从父母车祸后突然的成熟，要负担爸爸的医药费家庭开支自己和弟弟上学照顾他俩，纵然他知道自己是同性恋，但无法接受自己也觉得背叛了妈妈，因为父母是那样的希望他娶妻生子。攻受的两个朋友都好好，万飞傻不拉叽，申涛耿直仗义，最最最可爱的必须是二宝邱彦，可爱无敌聪慧过人特别懂事，他对方小军的友谊其实他是很机智情商很高。邱爸爸去世那里很难过，多么好的父亲呀，我想最后他是知晓儿子的性取向的，也是祝福他们的。"
-  },
-  {
-    "name": "南方海啸",
-    "author": "卡比丘",
-    "main_characters": "韦嘉易&赵竞",
-    "review_date": "2025-01-01",
-    "type": "BL小说",
-    "tags": [
-      "现代",
-      "甜文"
-    ],
-    "story_summary": "现代文，小甜文，毕竟赵竞从小到大只吃过爱情的苦（其实并么有）",
-    "notes": ""
-  },
-  {
-    "name": "凶人恶煞",
-    "author": "年终",
-    "main_characters": "40%进度",
-    "review_date": "2025-02-01",
-    "type": "BL小说",
-    "tags": [],
-    "story_summary": "",
-    "notes": ""
-  },
-  {
-    "name": "已读不回",
-    "author": "一别都门三改火",
-    "main_characters": "宁知然&顾承锐",
-    "review_date": "2025-04-01",
-    "type": "BL小说",
-    "tags": [
-      "穿越",
-      "现代"
-    ],
-    "story_summary": "现代文，穿越到未来发现我和前任结婚了，记忆点不深估计不是很爱。",
-    "notes": ""
-  },
-  {
-    "name": "真爱来临那天",
-    "author": "涂格安",
-    "main_characters": "汪勤&赵凛生",
-    "review_date": "2025-06-01",
-    "type": "BL小说",
-    "tags": [
-      "现代"
-    ],
-    "story_summary": "现代文，“我和前女友的前姐夫一夜情了”，记忆点不深估计不爱。",
-    "notes": ""
-  },
-  {
-    "name": "恋爱脑重生日常",
-    "author": "焦糖冬瓜",
-    "main_characters": "姜若棠&陆归帆",
-    "review_date": "2025-06-01",
-    "type": "BL小说",
-    "tags": [
-      "重生",
-      "现代"
-    ],
-    "story_summary": "现代文，重生后艺术生好好学习天天向上，一般。",
-    "notes": ""
-  },
-  {
-    "name": "古代幼崽种田日常",
-    "author": "昵昵儿女",
-    "main_characters": "罐罐&魏承",
-    "review_date": "2025-06-01",
-    "type": "BL小说",
-    "tags": [
-      "种田",
-      "古代",
-      "ABO"
-    ],
-    "story_summary": "架空种田，哥儿设定，可爱罐罐，捡罐罐养罐罐升级罐罐。",
-    "notes": ""
-  },
-  {
-    "name": "两位少爷坚持联姻",
-    "author": "消失绿缇",
-    "main_characters": "兰斯&湛平川",
-    "review_date": "2025-06-01",
-    "type": "BL小说",
-    "tags": [
-      "骨科",
-      "爽文",
-      "虐文"
-    ],
-    "story_summary": "异能世界的爽文，战斗写得也不错。两大公会的少爷互相隐瞒身份激情表演，装莲花的强受很爱。",
-    "notes": "群像写得不错，邓枝和妈妈的故事一开始就让我泪目了，骷髅小邓献上小虫虫好可爱。Oliver小天使赚够了我的眼泪，他的善良真的是无暇的，吃过那么多苦。副cp有对兄弟，哥哥的异能算是有double人格，很腹黑但也很爱。"
-  },
-  {
-    "name": "夜跑别在雷雨天",
-    "author": "空菊",
-    "main_characters": "",
-    "review_date": "2025-06-01",
-    "type": "BL小说",
-    "tags": [
-      "穿越",
-      "重生",
-      "ABO",
-      "刑侦"
-    ],
-    "story_summary": "abo，两个平行世界来回穿，一般。",
-    "notes": "雷雨天加受父母留下的磁铁石双条件下受从abo的世界穿越到了攻所在的男女两性世界，生活中的认知差异有搞笑的误会，比如明明18cm的攻因为没有腺体，被受认定为阳痿，主线以几个案件推动两人的互相了解，再结合两个世界的来回穿越，大世界观就是元时空和分裂时空，类似游戏读档存档。最后反正就是都来到了两性世界。一般，说是本格推理但没有很精彩，有平行时空分裂时空，再叠加感情中寻找自我释怀自我，很多要素反而觉得乏味，每样都不深入。空菊的文印象深的还是电动小马达。由由说她是野人，达咩，以后不看她的文了。"
-  },
-  {
-    "name": "十世禅",
-    "author": "山里不听宣",
-    "main_characters": "伏䶮&和尚（罗耶佛）",
-    "review_date": "2025-07-01",
-    "type": "BL小说",
-    "tags": [
-      "玄幻"
-    ],
-    "story_summary": "玄幻，和尚与龙，佛与魔，九世娑婆，渡与皈依。",
-    "notes": "作者文笔还不错其实，用词着句很佛美，阅读也很累，很多佛语典故不知何故。时间线太长，导致有点流水账，不过前后的埋伏呼应，证明作者的思路和大局观很用心。我还挺喜欢啼野的设定，恶本念。那个仙帝将欲行，我觉得好讽刺人类，自诩高高在上不过是自己的私欲，爱而不得。 石桥禅喜欢，之前看有个电影，杨紫琼演的，也有这段。"
-  },
-  {
-    "name": "绝地逢生",
-    "author": "焦糖冬瓜",
-    "main_characters": "肖岩&海茵",
-    "review_date": "2025-07-01",
-    "type": "BL小说",
-    "tags": [
-      "丧尸"
-    ],
-    "story_summary": "异世丧尸病毒，真的对受长相很普这点耿耿于怀吖",
-    "notes": ""
-  },
-  {
-    "name": "囚于永夜",
-    "author": "麦香鸡",
-    "main_characters": "温然&顾昀迟",
-    "review_date": "2025-07-01",
-    "type": "BL小说",
-    "tags": [
-      "ABO"
-    ],
-    "story_summary": "abo，欲言难止的副cp，很喜欢温然小可爱，比苦瓜还苦，辛苦的长大，努力的活着。",
-    "notes": ""
-  },
-  {
-    "name": "搭界",
-    "author": "里伞",
-    "main_characters": "夏天梁&徐运墨",
-    "review_date": "2025-07-01",
-    "type": "BL小说",
-    "tags": [
-      "甜文",
-      "豪门"
-    ],
-    "story_summary": "小市民生活类",
-    "notes": "艺术世家出生一本正经徐运墨，从小叛逆口甜舌滑夏天梁，要不是作者提前说了攻受，我肯定站反。搭的是什么界呢，难道是餐饮界和文化界？徐运墨的妈妈，不错的人设，曲艺优秀大家，婚后并没有退隐相夫教子，所以对二儿子是心存愧疚，让二儿子觉得不被爱，被比较。"
-  },
-  {
-    "name": "我靠种田飞升了",
-    "author": "爬上屋顶找星星",
-    "main_characters": "宋爱田&南景流",
-    "review_date": "2025-07-01",
-    "type": "BL小说",
-    "tags": [
-      "种田",
-      "玄幻"
-    ],
-    "story_summary": "种田修真",
-    "notes": ""
-  },
-  {
-    "name": "不生不熟",
-    "author": "不问三九",
-    "main_characters": "何乐知&韩方驰",
-    "review_date": "2025-07-01",
-    "type": "BL小说",
-    "tags": [],
-    "story_summary": "友情陪伴，直男转弯，谈了恋爱连友情都不要了么？",
-    "notes": "单亲母亲给予的无条件的爱真的可以滋养孩子的爱无畏，爱的洒脱真挚果敢，其实在和小黑相爱的8年里，乐知是真的委屈了自己还是他可能并没有看起来那样爱无畏呢？"
-  },
-  {
-    "name": "离婚了我还穿着你的外套",
-    "author": "不问三九",
-    "main_characters": "原野&方绍一",
-    "review_date": "2025-07-01",
-    "type": "BL小说",
-    "tags": [
-      "娱乐圈",
-      "破镜重圆"
-    ],
-    "story_summary": "娱乐圈文，伪破镜重圆",
-    "notes": "由由推荐了不生不熟，看完后发现自己很爱不问三九的文，燎原三部曲仿佛我身边也有永远炙热的晓东，永远可靠的汤医生，小南和苦哥已经长大，周罪也不再做噩梦，萧老师的爱永远直接和护短。"
-  },
-  {
-    "name": "夜潮褪去",
-    "author": "三道",
-    "main_characters": "宋然&沈闻飞",
-    "review_date": "2025-08-01",
-    "type": "BL小说",
-    "tags": [
-      "现代",
-      "甜文"
-    ],
-    "story_summary": "现代生活日常向，酸涩度50%，多少有点不张嘴了，一个不会说，一个不想说。",
-    "notes": "和卡比丘的酸涩文比起来，文笔差了点。宋然的设定和俞繁有点像，所以我局限的认为宋然的坚韧是钢铁，但后续他鸵鸟似的寄生在沈闻飞有意给他打造的安全圈内，我感觉他其实是懦弱的，有点不符合我的预期。反之，沈闻飞的不张嘴、霸道、自以为是其实刻画的还可以。他以为自己看似看轻就可以拥有不会失去的爱人，圈起来占有保护，但最后鱼儿搁浅了，差点丧生。严鸣小可爱就是工具人，"
-  },
-  {
-    "name": "爱情公园",
-    "author": "卡比丘",
-    "main_characters": "许渭尘&唐既明",
-    "review_date": "2025-08-01",
-    "type": "BL小说",
-    "tags": [
-      "现代",
-      "甜文"
-    ],
-    "story_summary": "现代文生活日常向，酸涩度40%，脾气不好的刻薄小孩会有糖吃吗？正文是受的视角，番外是攻的视角，重温来看还可以，标准卡比丘。",
-    "notes": ""
-  },
-  {
-    "name": "豪门炮灰开始发飙",
-    "author": "冷耳",
-    "main_characters": "陆燃x纪旻",
-    "review_date": "2025-08-01",
-    "type": "BL小说",
-    "tags": [
-      "重生",
-      "现代",
-      "爽文",
-      "虐文"
-    ],
-    "story_summary": "现代都市，重生后的陆燃不要再被欺负，一言不合就巴掌狗屎满天飞，爽！",
-    "notes": "真的很不喜欢陆燃大哥沈星遇，即便他也是很可怜的家族守门人。感觉所有配角都好可怜，都不是自己，虚假。总体很爽，唯一可能虐心的点就是上辈子车祸导致残疾被困在病床一隅十年，十年疼痛折磨，重生后的幻痛让攻心疼得要死。"
-  },
-  {
-    "name": "一颗苹果",
-    "author": "孟还",
-    "main_characters": "谢然x谢青寄",
-    "review_date": "2025-08-01",
-    "type": "BL小说",
-    "tags": [
-      "现代",
-      "校园",
-      "骨科",
-      "虐文"
-    ],
-    "story_summary": "现代文，骨科，虐心程度70%，小谢的爱好满好委屈，明明他和谢然一样失去妈妈失去姐姐，谢然的爱也好心疼呀，罪责二字压垮了他。",
-    "notes": "第一次看是因为车不错，看完后当时印象最深的记忆点就是肉痛并没有过多的去关注故事中的遗憾，时隔两年的重温深深被这个故事抓住。兄弟俩重走的7年仍然很心痛（我对7这个数字真的很爱恨交加），第一遭的最后谢然带着无限的自责去结束自己的生命，把未来留给小谢留给活着的人，是呀他总是那样的我行我素恣意妄为，得意时觉得一切都是自己能罩着盲目自信张狂，失意时一切的错误一切的罪责都归咎在自己身上，强烈的矛盾拉扯作者刻画得感同身受，最后谢然碎了，小谢就这样被他抛弃在了失去妈妈失去姐姐没有爸爸的未来。番外是小谢的视角，从那天早起开始写起，因为是上帝视角，我总想让他别走，回头去亲亲谢然吧，别去学校了直接抱着谢然吧，打破原则告诉谢然吧，你很爱他。谁说活着的人就会好好的，被留下的人苍白无力，是弃婴。"
-  },
-  {
-    "name": "穿成万人嫌替身O后",
-    "author": "谢沧浪",
-    "main_characters": "温盛然x黎瑜",
-    "review_date": "2025-08-01",
-    "type": "BL小说",
-    "tags": [
-      "现代",
-      "ABO",
-      "豪门"
-    ],
-    "story_summary": "现代都市，abo，两世都是亲缘单薄，真的很讨厌abo中o的宿命感。",
-    "notes": "对比豪门炮灰的大哥和父母，这里面的真的太讨厌，自以为是的温琰，好歹炮灰里界面的沈星遇有脑子有能力能一个人撑住家族，这文里面温琰无能自负讨厌死了。"
-  },
-  {
-    "name": "我相公是纨绔",
-    "author": "端瑜",
-    "main_characters": "谢乔玉x万明霁",
-    "review_date": "2025-08-01",
-    "type": "BL小说",
-    "tags": [
-      "种田",
-      "穿越",
-      "古代",
-      "ABO",
-      "虐文"
-    ],
-    "story_summary": "种田穿越，现在直男理科生穿身纨绔闲子后，取哥儿生子发奋图强，挺有意思",
-    "notes": "主线还是比较种田，谢乔玉庶生子被嫡母打压，一心只想嫁给秀才投资人才做一门当家夫郎，奈何第一遭所选非人，在万明霁混账爹的葬礼上看上了“要想俏一身孝”的攻，当然此时已是穿身后的，并不是之前的混账纨绔。本想着万明霁投身科举，后面确实从武举起步，和年幼太子驸马爷刑部司郎谢家大哥一起，拒和亲为家国扩疆土忧民生，俩主角各自两条线，政途一条行商一条比较标准的配合种田，买香皂、近视眼镜、镜子也是标准套餐。受挺可爱的，傲娇小猫咪，虽未庶子但不自卑，靠自己卖绣工花草赚小钱，还很心疼孝顺哥儿阿爹，被老太太开始不喜，以为自己会变成乡下小哥，确是老太太对他的锻炼，这个奶奶挺好的，让我想起了盛明兰的奶奶。总体轻松有趣。"
-  },
-  {
-    "name": "幸臣",
-    "author": "灰谷",
-    "main_characters": ".许莼x谢翊（九哥）",
-    "review_date": "2025-08-01",
-    "type": "BL小说",
-    "tags": [
-      "古代",
-      "爽文",
-      "虐文"
-    ],
-    "story_summary": "古代架空权谋，国公世子纨绔浪荡还是断袖，遇到九哥后开启了奋斗成长模式，一路成为中宫醇亲王，还可以",
-    "notes": "作者炫技选满毕竟真的好多字都不认识，每次看古代的文都会有这个困扰，更别提三纲五常的那些仁义道德，就一张圣旨我都读起来困难。不过看起来挺爽的，基本受就是全程开挂，不管是亲戚还是朋友，一路遇到的都算是良师益友得力助手。毕竟最上面的那位以整个江山为后盾。番外后面才看，让我泪目的点居然是害怕皇帝和方子静方子兴君臣两相疑。"
-  },
-  {
-    "name": "已读不回",
-    "author": "一别都门三改火",
-    "main_characters": "宁知然x顾承锐",
-    "review_date": "2025-08-01",
-    "type": "BL小说",
-    "tags": [
-      "重生",
-      "现代"
-    ],
-    "story_summary": "现代都市，奇幻时空读档循环。先爱的先说不爱，但不能说他不爱；后爱的放不开，但不能说他会爱。其实是门不当户不对完全两个世界的人，还好，一起慢慢学会爱，爱对方爱自己，没有放手。",
-    "notes": ""
-  },
-  {
-    "name": "暗恋十二年的他离婚了",
-    "author": "梅子汤汤",
-    "main_characters": "任昭远x谭铮",
-    "review_date": "2025-08-01",
-    "type": "BL小说",
-    "tags": [
-      "现代",
-      "虐文",
-      "年下"
-    ],
-    "story_summary": "现代都市爱情，年下7岁，珠宝设计师和风投精英的爱情故事。因为喜欢天空配的广播剧，看了这个文，加持对故事的喜欢，没有大的剧情线，主要从亲情友情爱情一步步去丰满人物，彼此相伴相成。",
-    "notes": "十二年的暗恋，从谭铮的视角，是高考动员会上的优秀学长，是一起救助过小猫咪的漂亮人儿，也是在寒夜救赎了他的侠士，优秀仿佛磁铁，吸引着他一步一步靠近。因为他，他想参加尽快参加高考，所以跳级大强度学习，赶在任昭远大四的时候能和他同时空相遇一年；因为他，他想做珠宝设计肯定需要花很多钱需要拉投资，那谭铮就做风投使劲儿赚钱随时准备着，所以在任昭远回国开AL工作室的时候，主动投资。谭铮去过任昭远去过的很多地方，住过他前日刚离开的酒店，买过同款行李箱同款香水，去过同样的城市，在任昭远海外学习被诬陷时和网友群战，谭铮像邪恶的私生似的，在任昭远有赵原青的十年里，默默的追随。任昭远以为的爱，原来从他20岁，从谭铮13岁时，就已经开始了。这个点挺吸引我的，我就很喜欢这样的笃定和唯一。故事后面涉及到的矛盾，任昭远的底线不欺骗不设计不强迫，谭铮都做了，但这个矛盾后两个人的自我破茧彼此笃信，这就是虐文后的那一颗大糖！另外，嘻嘻还是可以代一代我的bx。"
-  },
-  {
-    "name": "心眼",
-    "author": "北南",
-    "main_characters": "乔苑林x梁承",
-    "review_date": "2025-08-01",
-    "type": "BL小说",
-    "tags": [
-      "现代",
-      "校园",
-      "骨科",
-      "年上"
-    ],
-    "story_summary": "现代校园爱情，年上6岁，心外科医生和新闻记者的青春爱情。一个遭受家暴，杀人坐牢，用尽万般力气，才让自己成为了一个正常人；一个拥有心脏病，万事需谨慎，人生在24岁之前，都没有什么特别的运动乐趣。",
-    "notes": "在父亲乔文渊和阿姨贺婕的婚礼上，乔苑林看到了那个说“这辈子都不会回平海的人”，只是这一次，他们不再是救与被救的关系，不是小房东与租客的关系，而是外人眼中的“继兄弟”。然而，这一次回来，梁承是要“干大事儿”的，他说：决定权在乔苑林那边，无论他是什么选择，他都受着。乔苑林的外婆太好了，没有见过我的外婆，但我妈妈很爱我所以我想我外婆也会很喜欢我。"
-  },
-  {
-    "name": "小钟老师乡村历险记",
-    "author": "再三斯",
-    "main_characters": "钟意秋x肖鸣夜",
-    "review_date": "2025-09-01",
-    "type": "BL小说",
-    "tags": [
-      "种田",
-      "校园",
-      "年代文"
-    ],
-    "story_summary": "90年代种田，被开除的重点大学物理系高材生在农村振兴乡村教育，遇到人狠话不多的肖二哥。",
-    "notes": "种田最扯人心的就是群像的丰富多彩，文好像是前年种田文的top，还是不错的。主线明确，受从被迫接受去农村当老师作为逃离的一种别无选择，到慢慢被学生信任喜爱，看到农村教育知识普及的重要性，逐渐明确自己作为老师的使命。义叔很好，真心珍惜高材生也真心把受当家人，六子很仗义，没有攻那样张扬也是踏实勤劳的好人，王文俊真的是嘴萃毒了的小直男，心善有才，学历低是他唯一痛处。情敌小林也刻画的很好，勇敢清醒的女性，有勇有谋敢爱敢放不矫情！副cp故事线很少，着重体现了对主角小两口的支持，事业线主要靠他俩打辅助。最狠人设肖二哥，可是敢杀人，原本已经断情绝爱似的，遇到闪光的秋儿，才愿意热爱这个世界，这个设定我也很吃！不错！"
-  },
-  {
-    "name": "竹马难猜",
-    "author": "冻感超人",
-    "main_characters": "沈言x赵林苏",
-    "review_date": "2025-09-01",
-    "type": "BL小说",
-    "tags": [
-      "现代",
-      "校园",
-      "骨科"
-    ],
-    "story_summary": "现代校园爱情，突然出现的新技能：对视能看到对方头顶浮现性幻想对象的名字！然后sy就看到了9岁开始一起同桌朋友一起长大的好兄弟头顶自己的大名！",
-    "notes": "设定不错文风轻快，在一起后含亲量忒高，没有详细的车但是还是看的扭扭捏捏。有点直掰弯，也有万千人中只有你。攻的人设还挺喜欢，小时候是野人可爱，长大后对自己人生的把控父母的放养有爱，还有对爱人的占有欲唯一性，洗算一下校园文的攻好像都这样。"
-  },
-  {
-    "name": "离婚从被大佬追求开始",
-    "author": "半今茶",
-    "main_characters": "温祈x贺卓鸣",
-    "review_date": "2025-09-01",
-    "type": "BL小说",
-    "tags": [
-      "现代",
-      "豪门",
-      "破镜重圆"
-    ],
-    "story_summary": "现代都市，有点豪门世家，攻对受一见钟情但那会儿受还没离婚，但没有出轨不是小三。",
-    "notes": ""
-  },
-  {
-    "name": "穿越之炮灰男配",
-    "author": "",
-    "main_characters": "",
-    "review_date": "2025-09-01",
-    "type": "BL小说",
-    "tags": [
-      "穿越",
-      "玄幻",
-      "爽文"
-    ],
-    "story_summary": "穿书修真，武徒武师武灵武王武皇武尊，大概就这么升级武力值，然后还会有丹药、阵法、炼器、铭文、符箓作为技能升级，整个比较爽，攻受从炮灰配角一路爆改成为绝顶高手。",
-    "notes": ""
-  },
-  {
-    "name": "诟病",
-    "author": "池总渣",
-    "main_characters": "祁薄言x纪望",
-    "review_date": "2025-10-01",
-    "type": "BL小说",
-    "tags": [
-      "ABO",
-      "娱乐圈",
-      "虐文"
-    ],
-    "story_summary": "娱乐圈，双A，标记消失之前回到我身边，一见钟情/误会（一方以为另一方标记了好朋友受伤）分手/精神病（祁家变态）痛苦，还是有点虐，但总体还是觉得双A做爱真疼吖，我都替纪望疼。",
-    "notes": ""
-  },
-  {
-    "name": "穿越夫郎有点甜",
-    "author": "羽春",
-    "main_characters": "云程x叶存山",
-    "review_date": "2025-10-01",
-    "type": "BL小说",
-    "tags": [
-      "种田",
-      "穿越",
-      "现代",
-      "古代",
-      "ABO"
-    ],
-    "story_summary": "穿越种田打猎为主？，现代超级宅男且是网络达人的云程穿到架空时代成为一名哥儿，和糙汉黑皮书生一起发家致富创业科举的故事。",
-    "notes": ""
-  },
-  {
-    "name": "换嫁小夫郎",
-    "author": "",
-    "main_characters": "",
-    "review_date": "2025-10-01",
-    "type": "BL小说",
-    "tags": [
-      "种田"
-    ],
-    "story_summary": "豆腐种田",
-    "notes": ""
-  },
-  {
-    "name": "营业悖论",
-    "author": "稚楚",
-    "main_characters": "",
-    "review_date": "2025-10-01",
-    "type": "BL小说",
-    "tags": [
-      "娱乐圈",
-      "年下"
-    ],
-    "story_summary": "娱乐圈，idol六人团，从小糊糊到大顶流，一般好代虽然也是年下，但性格经历背景差异挺大的。",
-    "notes": ""
-  },
-  {
-    "name": "死后发现死对头暗恋我",
-    "author": "椿白",
-    "main_characters": "喻和颂x江季烔",
-    "review_date": "2025-11-01",
-    "type": "BL小说",
-    "tags": [
-      "重生",
-      "爽文"
-    ],
-    "story_summary": "重生复仇爽文，攻通过梦境逐渐想起前世记忆，受小时候因为车祸失去部分记忆，且被黑心父亲洗脑被利用成为争夺家族权势的工具，两次忘记和攻的关联，上一世是受死后攻为其复仇",
-    "notes": ""
-  },
-  {
-    "name": "在70年代当乘务员",
-    "author": "江湖太妖生",
-    "main_characters": "席于飞x云穆清",
-    "review_date": "2025-11-01",
-    "type": "BL小说",
-    "tags": [
-      "重生",
-      "年代文"
-    ],
-    "story_summary": "重生年代文，市场超市随身空间金手指设定，很有趣的是受太爱认亲戚了，去上海，捡到了攻改变了上世轨迹，认了热心张姨买了房子，帮了高知被斗被害的于大爷，更是后面于大爷搬去了京城和席家一起真正的生活在一起；去西北，帮助攻的家人平反，认了姑父认了姨夫，军队和农场都有人，都是为了照顾好攻的家人；去广州也是认了姨夫，前世一起做过生意此生更是早早的合作，还让上海认识的黑市副cp去广州那边开厂买地；东北更不用说了，老家大本营。总之受，这辈子就想赖在父母身边，和家人一起和爱人一起，混吃等死。",
-    "notes": ""
-  },
-  {
-    "name": "守寡多年",
-    "author": "芝芝猫猫",
-    "main_characters": "江云x陆淮",
-    "review_date": "2025-11-01",
-    "type": "BL小说",
-    "tags": [
-      "ABO",
-      "星际",
-      "甜文",
-      "虐文"
-    ],
-    "story_summary": "星际abo，为联盟牺牲了17年的老公回来了，估计想到双胞胎小儿子居然考试及格是上限，他都想回去再躺几年。在异性能量女王的精神力压制下，普通人早就精神时常，但攻在沉睡的17年其实一直都是清醒的，这样的痛苦太泯灭人性，同样的，受从甜心小可爱一个人养大双胞胎，一根根给自己武装上刺，保护家人也伤了自己。",
-    "notes": ""
-  },
-  {
-    "name": "我从棺材里坐起来妖孽都得跪下",
-    "author": "黑猫睨睨",
-    "main_characters": "段安洛x司苍",
-    "review_date": "2025-11-01",
-    "type": "BL小说",
-    "tags": [
-      "爽文",
-      "灵异"
-    ],
-    "story_summary": "玄学灵异，爽文。感觉这类文都会收养一群可可爱爱小妖怪小精怪。",
-    "notes": ""
-  },
-  {
-    "name": "失忆后死对头成了我男朋友了？",
-    "author": "祝麟",
-    "main_characters": "商玦x陆屿行",
-    "review_date": "2025-11-01",
-    "type": "BL小说",
-    "tags": [
-      "现代"
-    ],
-    "story_summary": "现代，攻失忆后受本是恶作剧，假装恋爱关系，本是不对付的两人，其实中学就相识，最后应证那句最了解你的往往是你的敌人。",
-    "notes": ""
-  },
-  {
-    "name": "当直男穿到古代冲喜",
-    "author": "998",
-    "main_characters": "王瑛x陈青岩",
-    "review_date": "2025-12-01",
-    "type": "BL小说",
-    "tags": [
-      "种田",
-      "穿越",
-      "现代",
-      "古代",
-      "ABO",
-      "骨科"
-    ],
-    "story_summary": "架空穿越种田，现代农学学生从试验田魂穿哥儿王瑛，Tip：随身空间智能试验田/种田冬卖蔬菜夏卖冰/攻走科举路突破被诬陷作弊后的心理创伤后遗症/陈家四叔三婶李家大舅庄上的佃户/兄弟姐妹都有好姻缘",
-    "notes": ""
-  },
-  {
-    "name": "真实遗愿清单",
-    "author": "卡比丘",
-    "main_characters": "李善情x庄叙",
-    "review_date": "2025-12-01",
-    "type": "BL小说",
-    "tags": [
-      "年上",
-      "破镜重圆"
-    ],
-    "story_summary": "年上三岁破镜重圆酸涩互相治愈，超高需求的受和板眼无情的攻，谁先爱呢？",
-    "notes": ""
-  },
-  {
-    "name": "重生后独宠灾星小夫郎",
-    "author": "菇菇弗斯",
-    "main_characters": "苏乙x钟洺",
-    "review_date": "2025-12-01",
-    "type": "BL小说",
-    "tags": [
-      "种田",
-      "重生"
-    ],
-    "story_summary": "重生种田，没有金手指，靠上一世的信息差从海捕为生到路上种田，从贱民到良民，全是各种海鲜。",
-    "notes": ""
-  },
-  {
-    "name": "年少成名",
-    "author": "图南鲸",
-    "main_characters": "顾商x江堰",
-    "review_date": "2025-12-01",
-    "type": "BL小说",
-    "tags": [
-      "娱乐圈",
-      "破镜重圆"
-    ],
-    "story_summary": "娱乐圈，包养的小狗想要真爱，ptsd的玩世不恭有睡眠障碍（母亲车祸死在自己眼前，父亲没有关爱安抚还娶了外室），误会后的破镜重圆。",
-    "notes": ""
-  },
-  {
-    "name": "绝命法医",
-    "author": "情韵小尸",
-    "main_characters": "沈君辞x顾言琛",
-    "review_date": "2025-12-01",
-    "type": "BL小说",
-    "tags": [
-      "现代",
-      "刑侦"
-    ],
-    "story_summary": "都市刑侦，法医和刑侦队长组合，心脏移植伴随记忆继承，身体换了但内核还是原主，重返是为了寻找父亲被害真想。案件节奏不错，设计非法采矿，妇女拐卖容器生子器官贩卖，慈善基金非法洗黑钱等，财权腐蚀下的新型犯罪，筑梦师策划师清道夫设定，涉及犯罪心理刑侦审问的设定比《犯罪心理》更能让我接受，会拿它和《默读》比较，都不错。攻受的感情线也很抓人心，受尸山血海走过来的哭，最后落到温暖的怀抱。",
-    "notes": ""
-  },
-  {
-    "name": "炮灰被反派听到心声后",
-    "author": "青鸟临星",
-    "main_characters": "姜鸣欢x裴靖渊",
-    "review_date": "2025-12-01",
-    "type": "BL小说",
-    "tags": [
-      "穿越",
-      "玄幻"
-    ],
-    "story_summary": "穿书修真，配角炮灰逆袭实则是天道之子集龙凤人族top级别基因。",
-    "notes": ""
-  },
-  {
-    "name": "眼前",
-    "author": "不问三九",
-    "main_characters": "潘小卓x石凯",
-    "review_date": "2025-12-01",
-    "type": "BL小说",
-    "tags": [],
-    "story_summary": "燎原小宇宙的故事终于都看完了，社恐小卓的喜欢真的好温暖。",
-    "notes": ""
+function extractTags(text) {
+  const low = text.toLowerCase();
+  return Object.entries(TAG_KW)
+    .filter(([,kws]) => kws.some(k => low.includes(k.toLowerCase())))
+    .map(([tag]) => tag);
+}
+
+// Count ⭐️ stars → rating (0-10)
+function parseStars(text) {
+  const m = text.match(/⭐️*/g);
+  if (!m) return 0;
+  const stars = m.join('').replace(/[^⭐]/g,'').length;
+  return stars ? Math.min(stars * 2, 10) : 0;
+}
+
+const MONTH_MAP = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',
+                   Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+
+function parseLines(lines, year) {
+  // Detect format: has month headers?
+  const hasMonths = lines.some(l => /^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?/.test(l.trim()));
+  // 2024 format: author in separate Normal line (starts with "by ")
+  const hasAuthorLine = lines.some(l => /^by\s+\S+[，,]/.test(l.trim()));
+
+  const records = [];
+  let currentMonth = '01';
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    if (!line) { i++; continue; }
+
+    // Month header
+    const mM = line.match(/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?/);
+    if (mM) { currentMonth = MONTH_MAP[mM[1]]; i++; continue; }
+
+    // Book entry
+    const bookM = line.match(/^\d+[.．]?\s*(?:重温)?[《「](.+?)[》」](.*)?$/);
+    if (bookM) {
+      const name = bookM[1].trim();
+      const rest = (bookM[2] || '').trim();
+      let author = '', chars = '', rating = 0;
+
+      // Extract stars from title
+      rating = parseStars(line);
+
+      // Parse "by author，chars" from title rest (2025/2023 format)
+      const byM = rest.replace(/[⭐️\s]+/g,'').match(/^by\s*(.+?)(?:[，,]\s*(.+))?$/);
+      if (byM) {
+        author = byM[1].trim().replace(/^[.\s]+/,'');
+        chars = (byM[2] || '').trim();
+      }
+
+      let summary = '', notes = '';
+
+      // Next line(s)
+      i++;
+      while (i < lines.length) {
+        const next = lines[i].trim();
+        if (!next) { i++; continue; }
+
+        // Stop if it's another book or month
+        if (/^\d+[.．]?\s*[《「重]/.test(next)) break;
+        if (/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?/.test(next)) break;
+
+        // 2024 format: author line
+        if (!author && /^by\s+\S+/.test(next)) {
+          // "by北南，娱乐圈文。💟瞿燕庭&陆文，desc"
+          const al = next.replace(/^by\s*/,'');
+          const comma = al.search(/[，,]/);
+          if (comma > 0) {
+            author = al.slice(0, comma).trim();
+            // rest might have chars & brief
+            const rest2 = al.slice(comma+1).trim();
+            // Try to find chars pattern (name&name or name x name)
+            const charM = rest2.match(/[💟♥]?\s*([^\s，,。！？]{2,10}[&x×][^\s，,。！？]{2,10})/);
+            if (charM) chars = charM[1].trim();
+            summary = rest2;
+          } else {
+            author = al.trim();
+          }
+          i++;
+          continue;
+        }
+
+        // Brief summary (short, no author)
+        if (!summary && next.length < 80 && !author) {
+          summary = next; i++; continue;
+        }
+        if (!summary && next.length < 80) {
+          summary = next; i++; continue;
+        }
+
+        // Long review → notes
+        notes += (notes ? '\n' : '') + next;
+        i++;
+      }
+
+      const fullText = `${summary} ${notes}`;
+      records.push({
+        name, author, main_characters: chars,
+        review_date: `${year}-${currentMonth}-01`,
+        type: 'BL小说',
+        rating,
+        tags: extractTags(fullText),
+        story_summary: summary,
+        notes,
+      });
+      continue;
+    }
+    i++;
   }
-];
+  return records;
+}
 
-let currentUser = null;
-let existingNames = new Set();
+// ── MAIN ──
+let parsedData = [], existingNames = new Set(), currentUser = null;
 
 async function init() {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) {
-    document.getElementById('statusText').textContent = '未登录，请先登录后访问此页面';
-    document.getElementById('btnImport').disabled = true;
-    return;
-  }
+  if (!session?.user) { alert('请先登录'); window.location.href='index.html'; return; }
   currentUser = session.user;
+}
 
-  // Load existing book names
-  const { data } = await supabase.from('spirit_records')
-    .select('name').eq('user_id', currentUser.id);
+// File input
+const fileInput = document.getElementById('fileInput');
+const uploadArea = document.getElementById('uploadArea');
+
+uploadArea.addEventListener('click', () => fileInput.click());
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag'));
+uploadArea.addEventListener('drop', e => { e.preventDefault(); uploadArea.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+async function handleFile(file) {
+  if (!file) return;
+  document.getElementById('previewCard').classList.remove('hidden');
+  document.getElementById('actionBar').classList.add('hidden');
+  document.getElementById('statusBox').textContent = '解析中…';
+  document.getElementById('tableBody').innerHTML = '';
+
+  // Extract year from filename
+  const yearM = file.name.match(/20\d\d/);
+  const year = yearM ? yearM[0] : new Date().getFullYear().toString();
+
+  // Read docx with mammoth
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  const lines = result.value.split('\n').filter(l => l.trim());
+
+  parsedData = parseLines(lines, year);
+
+  // Load existing names
+  const { data } = await supabase.from('spirit_records').select('name').eq('user_id', currentUser.id);
   existingNames = new Set((data||[]).map(r => r.name));
 
   renderTable();
-  const newCount = DATA.filter(r => !existingNames.has(r.name)).length;
-  document.getElementById('countBadge').textContent = `新增 ${newCount} 条 / 跳过 ${DATA.length - newCount} 条`;
-  document.getElementById('statusText').textContent = `已登录：${currentUser.email}，可以开始导入`;
+  const newCount = parsedData.filter(r => !existingNames.has(r.name)).length;
+  document.getElementById('countBadge').textContent = `新增 ${newCount} 条 / 跳过 ${parsedData.length - newCount} 条`;
+  document.getElementById('statusBox').textContent = `解析完成，共识别 ${parsedData.length} 条记录`;
+  document.getElementById('actionBar').classList.remove('hidden');
 }
 
 function renderTable() {
-  const tbody = document.getElementById('tableBody');
-  tbody.innerHTML = DATA.map((r, i) => {
+  document.getElementById('tableBody').innerHTML = parsedData.map((r, i) => {
     const skip = existingNames.has(r.name);
     const tagsHtml = r.tags.map(t => `<span class="tag">${t}</span>`).join('');
-    return `<tr id="row_${i}" class="${skip ? 'skip' : ''}">
+    const ratingStr = r.rating ? `★${r.rating}` : '-';
+    return `<tr id="row_${i}" class="${skip?'skip':''}">
       <td>${i+1}</td>
-      <td>《${r.name}》</td>
-      <td style="color:var(--muted)">${[r.author, r.main_characters].filter(Boolean).join(' · ')}</td>
-      <td>${r.review_date.slice(0,7)}</td>
-      <td>${tagsHtml || '-'}</td>
-      <td id="status_${i}">${skip ? '⏭ 已存在' : '待导入'}</td>
+      <td style="white-space:nowrap;">《${r.name}》</td>
+      <td style="color:var(--muted);font-size:11px;white-space:nowrap;">${[r.author,r.main_characters].filter(Boolean).join(' · ')||'-'}</td>
+      <td style="white-space:nowrap;">${r.review_date.slice(0,7)}</td>
+      <td style="white-space:nowrap;">${ratingStr}</td>
+      <td>${tagsHtml||'-'}</td>
+      <td id="st_${i}">${skip?'⏭ 已存在':'待导入'}</td>
     </tr>`;
   }).join('');
 }
 
-window.startImport = async function() {
-  if (!currentUser) return alert('请先登录');
+document.getElementById('btnImport').addEventListener('click', async () => {
   document.getElementById('btnImport').disabled = true;
-
-  const toImport = DATA.filter(r => !existingNames.has(r.name));
+  const toImport = parsedData.filter(r => !existingNames.has(r.name));
   let done = 0, errors = 0;
-
-  for (let i = 0; i < DATA.length; i++) {
-    const r = DATA[i];
-    if (existingNames.has(r.name)) continue;
-
-    const idx = DATA.indexOf(r);
-    document.getElementById(`status_${idx}`).textContent = '导入中…';
-
+  for (const r of toImport) {
+    const idx = parsedData.indexOf(r);
+    document.getElementById(`st_${idx}`).textContent = '导入中…';
     const { error } = await supabase.from('spirit_records').insert({
-      name: r.name,
-      author: r.author || null,
-      main_characters: r.main_characters || null,
-      review_date: r.review_date,
-      type: r.type,
+      name: r.name, author: r.author||null,
+      main_characters: r.main_characters||null,
+      review_date: r.review_date, type: r.type,
+      rating: r.rating||0,
       tags: r.tags.length ? r.tags : null,
-      story_summary: r.story_summary || null,
-      notes: r.notes || null,
-      rating: 0,
-      is_public: false,
-      user_id: currentUser.id
+      story_summary: r.story_summary||null,
+      notes: r.notes||null,
+      is_public: false, user_id: currentUser.id
     });
-
     if (error) {
-      document.getElementById(`status_${idx}`).textContent = '❌ 失败';
+      document.getElementById(`st_${idx}`).textContent = '❌ 失败';
       document.getElementById(`row_${idx}`).className = 'error';
       errors++;
     } else {
-      document.getElementById(`status_${idx}`).textContent = '✅ 完成';
+      document.getElementById(`st_${idx}`).textContent = '✅ 完成';
       document.getElementById(`row_${idx}`).className = 'done';
       done++;
     }
-
-    const pct = Math.round((done + errors) / toImport.length * 100);
-    document.getElementById('progressFill').style.width = pct + '%';
-    document.getElementById('statusText').textContent = `已导入 ${done} 条，失败 ${errors} 条，共 ${toImport.length} 条`;
-    
-    await new Promise(r => setTimeout(r, 150)); // slight delay to avoid rate limit
+    const pct = Math.round((done+errors)/toImport.length*100);
+    document.getElementById('progressFill').style.width = pct+'%';
+    document.getElementById('statusBox').textContent = `已导入 ${done} 条，失败 ${errors} 条，共 ${toImport.length} 条`;
+    await new Promise(r => setTimeout(r, 150));
   }
-
-  document.getElementById('statusText').textContent = `✅ 导入完成！成功 ${done} 条，失败 ${errors} 条`;
+  document.getElementById('statusBox').textContent = `✅ 导入完成！成功 ${done} 条，失败 ${errors} 条`;
   document.getElementById('btnImport').disabled = false;
-};
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  fileInput.value = '';
+  parsedData = [];
+  document.getElementById('previewCard').classList.add('hidden');
+});
 
 init();
 </script>
