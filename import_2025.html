@@ -85,19 +85,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 <script src="config.js"></script>
 
 <script>
-(async () => {
-  try {
-    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-    window._supabase = createClient(window.APP_CONFIG?.SUPABASE_URL||'', window.APP_CONFIG?.SUPABASE_ANON_KEY||'');
-  } catch(e) {
-    document.getElementById('statusBox').textContent = '❌ 网络连接失败，无法连接数据库';
-    return;
-  }
+// All parse/file logic runs immediately, no network needed
 
-const supabase = window._supabase;
-document.getElementById('fileInputEl')?.addEventListener('change', e => {
-  if (e.target.files[0]) handleFile(e.target.files[0]);
-});
 
 
 
@@ -184,9 +173,15 @@ function parseLines(lines, year){
 let parsedData=[],existingNames=new Set(),currentUser=null;
 
 async function init(){
-  const {data:{session}}=await supabase.auth.getSession();
-  if(!session?.user){alert('请先登录');window.location.href='index.html';return;}
-  currentUser=session.user;
+  try {
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    window._supabase = createClient(window.APP_CONFIG?.SUPABASE_URL||'', window.APP_CONFIG?.SUPABASE_ANON_KEY||'');
+    const {data:{session}}=await window._supabase.auth.getSession();
+    if(!session?.user){alert('请先登录');window.location.href='index.html';return;}
+    currentUser=session.user;
+  } catch(e) {
+    alert('网络连接失败，请检查网络后重试');
+  }
 }
 
 const fileInput=document.getElementById('fileInput');
@@ -220,7 +215,9 @@ window.handleFile = async function(file){
       if(line.trim())lines.push(line.trim());
     }
     parsedData=parseLines(lines,year);
-    const {data}=await supabase.from('spirit_records').select('name').eq('user_id',currentUser.id);
+    const sb2=window._supabase;
+    if(!sb2) return;
+    const {data}=await sb2.from('spirit_records').select('name').eq('user_id',currentUser.id);
     existingNames=new Set((data||[]).map(r=>r.name));
     renderTable();
     const newCount=parsedData.filter(r=>!existingNames.has(r.name)).length;
@@ -302,7 +299,9 @@ document.getElementById('btnImport').addEventListener('click',async()=>{
       const idx = parseInt(row.id.replace('row_',''));
       const r = parsedData[idx];
       await new Promise(x=>setTimeout(x,600));
-      const{error}=await supabase.from('spirit_records').insert({
+      const sb=window._supabase;
+    if(!sb){alert('数据库未连接');document.getElementById('btnImport').disabled=false;return;}
+    const{error}=await sb.from('spirit_records').insert({
         name:r.name,author:r.author||null,main_characters:r.main_characters||null,
         review_date:r.review_date,type:r.type,rating:r.rating||0,
         tags:r.tags?.length?r.tags:null,story_summary:r.story_summary||null,
@@ -324,11 +323,6 @@ document.getElementById('btnReset').addEventListener('click',()=>{
 });
 
 init();
-
-
-
-
-})();
 </script>
 </body>
 </html>
