@@ -42,7 +42,7 @@
       <div class="upload-icon">📄</div>
       <div class="upload-label">选择 .docx 文件</div>
       <div class="upload-hint" style="margin-bottom:12px;">支持 2023 / 2024 / 2025 等年度格式</div>
-      <input type="file" id="fileInput" accept=".docx" id="fileInputEl"
+      <input type="file" id="fileInputEl" accept=".docx" onchange="if(this.files[0])window.handleFile(this.files[0])"
         style="display:block;margin:0 auto;font-size:14px;color:var(--accent-deep);max-width:200px;"/>
     </div>
     <ul class="tip" style="margin-top:12px;">
@@ -195,7 +195,7 @@ uploadArea.addEventListener('dragover',e=>{e.preventDefault();uploadArea.classLi
 uploadArea.addEventListener('dragleave',()=>uploadArea.classList.remove('drag'));
 uploadArea.addEventListener('drop',e=>{e.preventDefault();uploadArea.classList.remove('drag');handleFile(e.dataTransfer.files[0]);});
 
-window.handleFile = async function handleFile(file){
+window.handleFile = async function(file){
   if(!file)return;
   document.getElementById('previewCard').classList.remove('hidden');
   document.getElementById('actionBar').classList.add('hidden');
