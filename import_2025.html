@@ -261,7 +261,7 @@ document.getElementById('btnImport').addEventListener('click',function(){
       }
       document.getElementById('progressFill').style.width=Math.round((done+errors)/toImport.length*100)+'%';
       document.getElementById('statusBox').textContent='已导入 '+done+' 条，失败 '+errors+' 条，共 '+toImport.length+' 条';
-      setTimeout(function(){doNext(idx+1);},600);
+      setTimeout(function(){doNext(idx+1);},1500);
     });
   }
   doNext(0);
