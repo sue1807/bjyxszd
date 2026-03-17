@@ -251,7 +251,9 @@ document.getElementById('btnImport').addEventListener('click',function(){
       is_public:false,user_id:user.id
     }).then(function(res){
       if(res.error){
-        document.getElementById('st_'+origIdx).textContent='❌ '+(res.error.message||'失败');
+        var errMsg=res.error.message||res.error.code||JSON.stringify(res.error);
+document.getElementById('st_'+origIdx).textContent='❌ '+errMsg;
+console.error('Failed:',r.name,res.error);
         document.getElementById('row_'+origIdx).className='error';
         errors++;
       } else {
