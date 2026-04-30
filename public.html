@@ -177,6 +177,10 @@
       supabase.from('spirit_records').select('id,name,type,rating,tags,author,main_characters,review_date,user_id,is_public,quick_review').eq('is_public', true).order('rating', { ascending: false, nullsFirst: false }).order('name'),
       supabase.from('profiles').select('id,nickname')
     ]);
+    if (recRes.error) {
+      document.getElementById('globalStatus').textContent = '加载失败：' + recRes.error.message;
+      return;
+    }
     allRecords = recRes.data || [];
     (profRes.data || []).forEach(p => { profiles[p.id] = p.nickname; });
     renderFilters();
