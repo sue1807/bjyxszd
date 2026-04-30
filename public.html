@@ -146,7 +146,7 @@
   const TYPE_ICONS = { 'BL小说': '🌙', '文学小说': '📖', '非虚构书籍': '📝', '广播剧': '🎧' };
   const PAGE_SIZE = 20;
 
-  let supabase, currentUser, allRecords = [], profiles = {}, currentPage = 1, typeFilter = '';
+  let supabase, currentUser, allRecords = [], profiles = {}, currentPage = 1, typeFilter = '', sortMode = 'rating';
 
   function esc(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function getRatingLabel(r) {
