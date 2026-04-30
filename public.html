@@ -122,6 +122,10 @@
     </div>
     <div class="global-status" id="globalStatus"></div>
 
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button id="sortRating" class="btn-ghost btn-sm" style="border:1.5px solid var(--accent);color:var(--accent-deep);border-radius:20px;padding:4px 12px;font-size:12px;">★ 按评分</button>
+      <button id="sortDate" class="btn-ghost btn-sm" style="border:1.5px solid var(--line);color:var(--muted);border-radius:20px;padding:4px 12px;font-size:12px;">📅 按时间</button>
+    </div>
     <div class="filter-row" id="filterRow"></div>
 
     <div class="list-panel">
@@ -196,30 +200,34 @@
       return [r.name, r.author||'', ...(r.tags||[])].join(' ').toLowerCase().includes(keyword);
     });
 
-    currentPage = Math.min(currentPage, Math.ceil(filtered.length/PAGE_SIZE)||1);
-    const paged = filtered.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
-    const totalPages = Math.ceil(filtered.length/PAGE_SIZE);
-
     if (!filtered.length) {
       document.getElementById('recordsList').innerHTML = `<div class="empty-state"><div class="empty-state-icon">📚</div><div>还没有公开的记录</div></div>`;
       return;
     }
 
-    // Group by book name (unique key)
+    // Group ALL filtered by book name, use max rating per group
     const groupMap = new Map();
-    paged.forEach(r => {
+    filtered.forEach(r => {
       const key = (r.name||'').trim();
-      if (!groupMap.has(key)) groupMap.set(key, { base: r, users: [] });
-      groupMap.get(key).users.push(r);
-    });
-    const groups = [...groupMap.values()].sort((a,b)=>{
-      const avgA = a.users.reduce((s,r)=>s+(r.rating||0),0)/a.users.length;
-      const avgB = b.users.reduce((s,r)=>s+(r.rating||0),0)/b.users.length;
-      return avgB - avgA;
+      if (!groupMap.has(key)) groupMap.set(key, { base: r, maxRating: r.rating||0, latestDate: r.review_date||'' });
+      const g = groupMap.get(key);
+      if ((r.rating||0) > g.maxRating) { g.maxRating = r.rating||0; g.base = r; }
+      if ((r.review_date||'') > g.latestDate) g.latestDate = r.review_date||'';
     });
 
+    let groups = [...groupMap.values()];
+    if (sortMode === 'rating') {
+      groups.sort((a,b) => b.maxRating - a.maxRating);
+    } else {
+      groups.sort((a,b) => b.latestDate.localeCompare(a.latestDate));
+    }
+
+    const totalPages = Math.ceil(groups.length/PAGE_SIZE);
+    currentPage = Math.min(currentPage, totalPages||1);
+    const paged = groups.slice((currentPage-1)*PAGE_SIZE, currentPage*PAGE_SIZE);
+
     document.getElementById('recordsList').innerHTML = `
-      <div>${groups.map(g => {
+      <div>${paged.map(g => {
         const b = g.base;
         const icon = TYPE_ICONS[b.type] || '📌';
         const authorStr = [b.author, b.main_characters].filter(Boolean).map(s => esc(s)).join(' · ');
@@ -265,6 +273,22 @@
     }
   });
 
+  document.getElementById('sortRating')?.addEventListener('click', () => {
+    sortMode = 'rating';
+    document.getElementById('sortRating').style.borderColor = 'var(--accent)';
+    document.getElementById('sortRating').style.color = 'var(--accent-deep)';
+    document.getElementById('sortDate').style.borderColor = 'var(--line)';
+    document.getElementById('sortDate').style.color = 'var(--muted)';
+    currentPage = 1; renderRecords();
+  });
+  document.getElementById('sortDate')?.addEventListener('click', () => {
+    sortMode = 'date';
+    document.getElementById('sortDate').style.borderColor = 'var(--accent)';
+    document.getElementById('sortDate').style.color = 'var(--accent-deep)';
+    document.getElementById('sortRating').style.borderColor = 'var(--line)';
+    document.getElementById('sortRating').style.color = 'var(--muted)';
+    currentPage = 1; renderRecords();
+  });
   document.getElementById('btnRefresh')?.addEventListener('click', loadData);
   init();
 </script>
