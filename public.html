@@ -209,8 +209,9 @@
     const groupMap = new Map();
     filtered.forEach(r => {
       const key = (r.name||'').trim();
-      if (!groupMap.has(key)) groupMap.set(key, { base: r, maxRating: r.rating||0, latestDate: r.review_date||'' });
+      if (!groupMap.has(key)) groupMap.set(key, { base: r, users: [], maxRating: r.rating||0, latestDate: r.review_date||'' });
       const g = groupMap.get(key);
+      g.users.push(r);
       if ((r.rating||0) > g.maxRating) { g.maxRating = r.rating||0; g.base = r; }
       if ((r.review_date||'') > g.latestDate) g.latestDate = r.review_date||'';
     });
