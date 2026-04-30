@@ -1133,9 +1133,9 @@
         <div class="cal-body">
           <div class="cal-nav">
             <button class="cal-nav-btn" id="calPrev">‹</button>
-            <span class="cal-month-label" id="calMonthLabel" style="display:flex;align-items:center;gap:0;flex:1;min-width:0;">
-              <select id="calYearSelect" style="border:none;background:transparent;font:inherit;font-size:11px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;flex:5;min-width:72px;"></select>
-              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:11px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;flex:2;min-width:38px;"></select>
+            <span class="cal-month-label" id="calMonthLabel" style="display:flex;align-items:center;gap:0;flex:1;min-width:0;justify-content:center;">
+              <select id="calYearSelect" style="border:none;background:transparent;font:inherit;font-size:11px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:44px;padding:0;text-align:left;"></select><span style="font-size:11px;font-weight:600;color:var(--accent-deep);margin-right:6px;">年</span>
+              <select id="calMonthSelect" style="border:none;background:transparent;font:inherit;font-size:11px;font-weight:600;color:var(--accent-deep);cursor:pointer;outline:none;width:28px;padding:0;text-align:left;"></select><span style="font-size:11px;font-weight:600;color:var(--accent-deep);">月</span>
             </span>
             <button class="cal-nav-btn" id="calNext">›</button>
           </div>
@@ -1513,10 +1513,10 @@
       const currentYear = String(calYear);
       if (!years.includes(currentYear)) years.push(currentYear);
       years.sort();
-      yearSel.innerHTML = years.map(y => `<option value="${y}" ${y===currentYear?'selected':''} style="color:var(--text);background:#fff;">${y}年</option>`).join('');
+      yearSel.innerHTML = years.map(y => `<option value="${y}" ${y===currentYear?'selected':''} style="color:var(--text);background:#fff;">${y}</option>`).join('');
       monthSel.innerHTML = Array.from({length:12},(_,i)=>{
         const m = i+1;
-        return `<option value="${m}" ${m===calMonth?'selected':''} style="color:var(--text);background:#fff;">${m}月</option>`;
+        return `<option value="${m}" ${m===calMonth?'selected':''} style="color:var(--text);background:#fff;">${m}</option>`;
       }).join('');
     }
 
@@ -2157,7 +2157,7 @@
     const rangeSel = document.getElementById('exportRange');
     if (rangeSel) {
       rangeSel.innerHTML = '<option value="all">全部记录</option>' +
-        years.map(y => `<option value="year_${y}">${y}年</option>`).join('') +
+        years.map(y => `<option value="year_${y}">${y}</option>`).join('') +
         years.map(y => Array.from({length:12},(_,i)=>`<option value="month_${y}_${i+1}">${y}年${i+1}月</option>`).join('')).join('');
     }
     document.getElementById('aboutDialog').showModal();
