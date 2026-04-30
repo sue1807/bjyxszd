@@ -147,7 +147,7 @@
   function esc(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function getRatingLabel(r) {
     const v = Number(r);
-    if (v===10) return '神作'; if (v>=7.5) return '推荐'; if (v>=5.5) return '普通'; if (v>=2.5) return '能看'; return '难看';
+    if (v===10) return '神作'; if (v>=7.6) return '推荐'; if (v>=6) return '还不错'; if (v>=4.1) return '文荒可看'; return '难看';
   }
 
   async function init() {
@@ -170,7 +170,7 @@
   async function loadData() {
     document.getElementById('globalStatus').textContent = '加载中…';
     const [recRes, profRes] = await Promise.all([
-      supabase.from('spirit_records').select('id,name,type,rating,tags,author,main_characters,review_date,user_id,is_public,quick_review').eq('is_public', true).order('name').order('review_date', { ascending: false, nullsFirst: false }),
+      supabase.from('spirit_records').select('id,name,type,rating,tags,author,main_characters,review_date,user_id,is_public,quick_review').eq('is_public', true).order('rating', { ascending: false, nullsFirst: false }).order('name'),
       supabase.from('profiles').select('id,nickname')
     ]);
     allRecords = recRes.data || [];
@@ -212,7 +212,11 @@
       if (!groupMap.has(key)) groupMap.set(key, { base: r, users: [] });
       groupMap.get(key).users.push(r);
     });
-    const groups = [...groupMap.values()];
+    const groups = [...groupMap.values()].sort((a,b)=>{
+      const avgA = a.users.reduce((s,r)=>s+(r.rating||0),0)/a.users.length;
+      const avgB = b.users.reduce((s,r)=>s+(r.rating||0),0)/b.users.length;
+      return avgB - avgA;
+    });
 
     document.getElementById('recordsList').innerHTML = `
       <div>${groups.map(g => {

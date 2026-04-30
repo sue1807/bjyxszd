@@ -181,7 +181,6 @@
     .btn-secondary {
       background: #f2e8e5;
       color: var(--accent-deep);
-      padding: 0px 6px;
     }
     .btn-secondary:hover { background: var(--accent-light); }
 
@@ -1350,11 +1349,7 @@
 
   function getRatingLabel(r) {
     const v = Number(r);
-    if (v === 10) return '神作';
-    if (v >= 7.5) return '推荐';
-    if (v >= 5.5) return '普通';
-    if (v >= 2.5) return '能看';
-    return '难看';
+    if (v===10) return '神作'; if (v>=7.6) return '推荐'; if (v>=6) return '还不错'; if (v>=4.1) return '文荒可看'; return '难看';
   }
 
   // ── Star Rating ──
