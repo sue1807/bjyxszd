@@ -1488,7 +1488,7 @@
       return;
     }
 
-    const totalWords = allRecords.reduce((sum, r) => sum + (r.story_summary||'').length + (r.notes||'').length, 0);
+    const totalWords = allRecords.reduce((sum, r) => sum + (r.story_summary||'').length + (r.notes||'').length + (r.quick_review||'').length, 0);
     const wordNum = totalWords >= 10000 ? (totalWords/10000).toFixed(1)+'万' : String(totalWords);
     const wordLabel = wordNum + ' 字';
 
@@ -1635,7 +1635,7 @@
       const tagsHtml = (r.tags||[]).map(t => `<span class="meta-tag">${esc(t)}</span>`).join('');
       const authorChars = [r.author, r.main_characters].filter(Boolean).map(s => esc(s)).join(' · ');
       const dateStr = r.review_date || '';
-      const words = (r.story_summary||'').length + (r.notes||'').length;
+      const words = (r.story_summary||'').length + (r.notes||'').length + (r.quick_review||'').length;
       const wordStr = words > 0 ? (words >= 10000 ? (words/10000).toFixed(1)+'万字' : words+'字') : '';
       return `
         <div class="record-row">
