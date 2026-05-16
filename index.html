@@ -1115,6 +1115,7 @@
       </div>
       <div class="header-right">
         <span class="user-badge" id="userEmail">-</span>
+        <a href="reading-calendar.html" style="text-decoration:none;"><button class="btn-ghost btn-sm">阅读日历</button></a>
         <a href="public.html" style="text-decoration:none;"><button class="btn-ghost btn-sm">公共书架</button></a>
         <button class="btn-ghost btn-sm" id="btnSignOut">退出</button>
       </div>
@@ -1706,8 +1707,17 @@
     els.userEmail.textContent = currentUser.email;
     if (currentUser.email) localStorage.setItem('remembered_login_email', currentUser.email);
     showScreen('app');
-    // draft loaded when dialog opens
-    fetchRecords();
+    fetchRecords().then(() => {
+      const params = new URLSearchParams(location.search);
+      if (params.get('newrec') === '1') {
+        resetForm();
+        els.name.value = params.get('name') || '';
+        els.startDate.value = params.get('start') || '';
+        els.reviewDate.value = params.get('end') || '';
+        history.replaceState({}, '', location.pathname);
+        els.recordDialog.showModal();
+      }
+    });
   }
 
   // ── Records CRUD ──

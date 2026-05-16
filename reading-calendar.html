@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>阅读日历 · 五谷丰登</title>
+  <link rel="preconnect" href="https://fonts.googleapis.cn" crossorigin />
+  <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f7f3ee;
+      --card: #ffffff;
+      --text: #3d2f2d;
+      --muted: #a08880;
+      --line: #ead8d0;
+      --accent: #c9847a;
+      --accent-light: #f2d0cc;
+      --accent-deep: #b06b62;
+      --soft: #fdf7f5;
+      --danger: #c96060;
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-weight: 300;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ── Loading ── */
+    .loading-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    /* ── Header ── */
+    .app-header {
+      background: var(--card);
+      border-bottom: 1px solid var(--line);
+      padding: 0 20px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .back-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .header-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent-deep);
+      flex: 1;
+    }
+
+    .user-badge {
+      font-size: 12px;
+      color: var(--muted);
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ── Month nav ── */
+    .month-nav {
+      background: var(--card);
+      border-bottom: 1px solid var(--line);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-btn {
+      width: 30px;
+      height: 30px;
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      background: none;
+      cursor: pointer;
+      color: var(--accent);
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+      flex-shrink: 0;
+    }
+
+    .nav-btn:hover { background: var(--soft); }
+
+    .month-label {
+      flex: 1;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* ── Filter tabs ── */
+    .filter-tabs {
+      background: var(--card);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      padding: 0 16px;
+    }
+
+    .filter-tab {
+      padding: 10px 14px;
+      font-size: 13px;
+      border: none;
+      border-bottom: 2px solid transparent;
+      background: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-family: inherit;
+      font-weight: 400;
+      transition: .15s;
+    }
+
+    .filter-tab.active {
+      color: var(--accent-deep);
+      font-weight: 600;
+      border-bottom-color: var(--accent);
+    }
+
+    /* ── Big calendar ── */
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: var(--card);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .cal-wd {
+      text-align: center;
+      padding: 6px 2px;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      border-left: 1px solid var(--line);
+      border-top: 1px solid var(--line);
+    }
+
+    .cal-cell {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      min-height: 88px;
+      padding: 3px 3px 4px;
+      background: var(--card);
+      position: relative;
+    }
+
+    .cal-cell.empty { background: var(--bg); }
+
+    .cal-cell.is-today { background: #fff8f7; }
+
+    .cell-date {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      text-align: right;
+      padding: 1px 2px 2px;
+      line-height: 1;
+    }
+
+    .cell-date-bubble {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* ── Book bars ── */
+    .book-bar {
+      display: block;
+      padding: 2px 5px;
+      border-radius: 3px;
+      margin-bottom: 2px;
+      font-size: 10px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      color: #3d2f2d;
+      line-height: 1.5;
+      transition: filter .1s;
+    }
+
+    .book-bar:hover { filter: brightness(0.88); }
+
+    .book-bar.plan-bar {
+      background: transparent !important;
+      border: 1.5px dashed;
+      color: #7a5550;
+    }
+
+    .more-hint {
+      font-size: 9px;
+      color: var(--muted);
+      padding: 0 3px;
+      line-height: 1.4;
+    }
+
+    /* ── FAB ── */
+    .fab {
+      position: fixed;
+      right: 24px;
+      bottom: 32px;
+      bottom: calc(32px + env(safe-area-inset-bottom));
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 26px;
+      line-height: 1;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(201,132,122,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: .2s;
+      z-index: 50;
+    }
+
+    .fab:hover { background: var(--accent-deep); transform: scale(1.06); }
+
+    /* ── Dialogs ── */
+    dialog {
+      width: min(480px, calc(100vw - 20px));
+      border: none;
+      border-radius: 20px;
+      padding: 0;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+      max-height: 88vh;
+      max-height: 88dvh;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      margin: 0;
+    }
+
+    dialog::backdrop {
+      background: rgba(50,30,25,0.4);
+      backdrop-filter: blur(3px);
+    }
+
+    .modal-wrap {
+      background: #fff;
+      border-radius: 20px;
+      max-height: 88vh;
+      max-height: 88dvh;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    .modal-head {
+      padding: 16px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #f5eeeb;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 10;
+    }
+
+    .modal-title { font-size: 16px; font-weight: 700; color: var(--accent-deep); }
+
+    .modal-body { padding: 16px 20px 20px; }
+
+    /* ── Form elements ── */
+    .field { margin-bottom: 12px; }
+
+    label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    input, select {
+      width: 100%;
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 13px;
+      background: var(--soft);
+      color: var(--text);
+      font: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border .2s, box-shadow .2s;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(201,132,122,0.15);
+      background: #fff;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    /* ── Tag chips ── */
+    .tag-chip {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      background: var(--soft);
+      border: 1.5px solid var(--line);
+      cursor: pointer;
+      margin: 3px;
+      transition: .15s;
+      color: var(--text);
+    }
+
+    .tag-chip.active {
+      background: var(--accent-light);
+      border-color: var(--accent);
+      color: var(--accent-deep);
+      font-weight: 600;
+    }
+
+    /* ── Meta tags (display) ── */
+    .meta-tag {
+      display: inline-block;
+      background: var(--soft);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* ── Buttons ── */
+    .btn-ghost {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: .2s;
+    }
+
+    .btn-primary:hover { background: var(--accent-deep); }
+
+    .btn-secondary {
+      background: var(--soft);
+      color: var(--accent-deep);
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-danger {
+      background: none;
+      color: var(--danger);
+      border: 1.5px solid var(--danger);
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    /* ── Detail sections ── */
+    .detail-block {
+      background: var(--soft);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--text);
+    }
+
+    .detail-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 5px;
+    }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex;
+      gap: 16px;
+      padding: 8px 16px;
+      background: var(--card);
+      border-bottom: 1px solid var(--line);
+      font-size: 11px;
+      color: var(--muted);
+      align-items: center;
+    }
+
+    .legend-item { display: flex; align-items: center; gap: 4px; }
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .legend-dot.plan {
+      border: 1.5px dashed var(--muted);
+      background: transparent;
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 480px) {
+      .cal-cell { min-height: 68px; }
+      .book-bar { font-size: 9px; padding: 1px 3px; }
+      .cell-date { font-size: 10px; }
+      .month-label { font-size: 14px; }
+      .app-header { padding: 0 14px; }
+      .month-nav { padding: 8px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="loadingScreen" class="loading-screen">加载中…</div>
+
+<div id="appScreen" class="hidden">
+  <header class="app-header">
+    <a href="index.html" class="back-link">← 返回</a>
+    <span class="header-title">阅读日历</span>
+    <span class="user-badge" id="userEmail"></span>
+  </header>
+
+  <div class="month-nav">
+    <button class="nav-btn" id="btnPrev">‹</button>
+    <span class="month-label" id="monthLabel"></span>
+    <button class="nav-btn" id="btnNext">›</button>
+  </div>
+
+  <div class="filter-tabs">
+    <button class="filter-tab active" data-filter="all">全部</button>
+    <button class="filter-tab" data-filter="records">已读</button>
+    <button class="filter-tab" data-filter="plans">计划</button>
+  </div>
+
+  <div class="legend">
+    <span class="legend-item">
+      <span class="legend-dot" style="background:#f2b3b3;"></span> 已读
+    </span>
+    <span class="legend-item">
+      <span class="legend-dot plan"></span> 计划
+    </span>
+  </div>
+
+  <div class="cal-weekdays" id="calWeekdays"></div>
+  <div class="cal-grid" id="calGrid"></div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="btnAddPlan" title="新增阅读计划">+</button>
+
+<!-- ── Plan form dialog ── -->
+<dialog id="planDialog">
+  <div class="modal-wrap">
+    <div class="modal-head">
+      <span class="modal-title" id="planDialogTitle">新增阅读计划</span>
+      <button class="btn-ghost" id="btnClosePlan">关闭</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>书名</label>
+        <input id="planName" type="text" placeholder="作品名称" />
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>计划开始</label>
+          <input id="planStart" type="date" />
+        </div>
+        <div class="field">
+          <label>计划结束</label>
+          <input id="planEnd" type="date" />
+        </div>
+      </div>
+      <div class="field">
+        <label>标签</label>
+        <div id="planTagChips" style="margin-top:4px;"></div>
+      </div>
+      <div class="btn-row">
+        <button class="btn-primary" id="btnSavePlan" style="flex:1;">保存</button>
+        <button class="btn-danger" id="btnDeletePlan" style="display:none;">删除</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- ── Record detail dialog ── -->
+<dialog id="recDialog">
+  <div class="modal-wrap">
+    <div class="modal-head">
+      <span class="modal-title" id="recDialogTitle"></span>
+      <button class="btn-ghost" id="btnCloseRec">关闭</button>
+    </div>
+    <div class="modal-body" id="recDialogBody"></div>
+  </div>
+</dialog>
+
+<!-- ── Plan detail dialog ── -->
+<dialog id="planDetailDialog">
+  <div class="modal-wrap">
+    <div class="modal-head">
+      <span class="modal-title" id="planDetailTitle">计划详情</span>
+      <button class="btn-ghost" id="btnClosePlanDetail">关闭</button>
+    </div>
+    <div class="modal-body" id="planDetailBody"></div>
+  </div>
+</dialog>
+
+<script src="config.js"></script>
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.APP_CONFIG;
+
+  // ── Constants ──
+  const CAL_COLORS = [
+    '#f2b3b3','#f2c9a0','#f2e8a0','#c8e0a8',
+    '#a0d4d4','#a8c0e8','#c8b0e0','#e8b0d0'
+  ];
+
+  const ALL_TAGS = [...new Set([
+    '修真','种田','无限流','校园','重生','穿书','快穿','星际','ABO','哨向','娱乐圈',
+    '破镜重圆','玄幻','灵异','年下','双强','年上','末世',
+    '悬疑','推理','严肃文学','女性文学','成长','家庭','历史','社会派',
+    '投资','传记','社会学','心理学','商业','纪实','访谈',
+    '猫耳','漫播','现代','古风','刑侦'
+  ])];
+
+  const TYPE_ICONS = { 'BL小说':'🌙','文学小说':'📖','非虚构书籍':'📝','广播剧':'🎧' };
+
+  function esc(v) {
+    return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function colorForId(id) {
+    const sum = String(id).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    return CAL_COLORS[sum % CAL_COLORS.length];
+  }
+
+  function getRatingLabel(v) {
+    v = Number(v);
+    if (v === 10) return '神作';
+    if (v >= 7.6) return '推荐';
+    if (v >= 6) return '还不错';
+    if (v >= 4.1) return '文荒可看';
+    return '难看';
+  }
+
+  function todayStr() {
+    const n = new Date();
+    return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+  }
+
+  // ── State ──
+  let supabase, currentUser;
+  let allRecords = [], allPlans = [];
+  let calYear, calMonth;
+  let currentFilter = 'all';
+  let editingPlanId = null;
+  let selectedPlanTags = new Set();
+
+  // ── Init ──
+  async function init() {
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let resolved = false;
+    supabase.auth.onAuthStateChange(async (_event, session) => {
+      currentUser = session?.user ?? null;
+      if (!resolved) {
+        resolved = true;
+        if (!currentUser) { window.location.href = 'index.html'; return; }
+        document.getElementById('loadingScreen').classList.add('hidden');
+        document.getElementById('appScreen').classList.remove('hidden');
+        document.getElementById('userEmail').textContent = currentUser.email;
+        const now = new Date();
+        calYear = now.getFullYear();
+        calMonth = now.getMonth() + 1;
+        await fetchData();
+        renderCalendar();
+        bindEvents();
+      }
+    });
+  }
+
+  async function fetchData() {
+    const [recRes, planRes] = await Promise.all([
+      supabase.from('spirit_records').select('*').eq('user_id', currentUser.id),
+      supabase.from('reading_plans').select('*').eq('user_id', currentUser.id)
+    ]);
+    allRecords = recRes.data || [];
+    allPlans = planRes.data || [];
+  }
+
+  // ── Render ──
+  function renderCalendar() {
+    const monthKey = `${calYear}-${String(calMonth).padStart(2,'0')}`;
+    document.getElementById('monthLabel').textContent = `${calYear}年${calMonth}月`;
+
+    const firstDay = new Date(calYear, calMonth - 1, 1);
+    const lastDate = new Date(calYear, calMonth, 0).getDate();
+    const startWd = (firstDay.getDay() + 6) % 7;
+    const monthStart = `${monthKey}-01`;
+    const monthEnd = `${monthKey}-${String(lastDate).padStart(2,'0')}`;
+    const today = todayStr();
+
+    // Build day → items map
+    const dayItems = {};
+    const addItem = (s, e, item) => {
+      if (!s) return;
+      if (s > monthEnd || e < monthStart) return;
+      for (let d = 1; d <= lastDate; d++) {
+        const k = `${monthKey}-${String(d).padStart(2,'0')}`;
+        if (k >= s && k <= e) {
+          if (!dayItems[k]) dayItems[k] = [];
+          dayItems[k].push(item);
+        }
+      }
+    };
+
+    if (currentFilter !== 'plans') {
+      allRecords.forEach(r => {
+        const s = r.start_date || r.review_date;
+        const e = r.review_date || r.start_date;
+        addItem(s, e, { kind: 'record', data: r });
+      });
+    }
+
+    if (currentFilter !== 'records') {
+      allPlans.forEach(p => {
+        const s = p.planned_start;
+        const e = p.planned_end || p.planned_start;
+        addItem(s, e, { kind: 'plan', data: p });
+      });
+    }
+
+    // Weekdays
+    document.getElementById('calWeekdays').innerHTML =
+      ['一','二','三','四','五','六','日'].map(w => `<div class="cal-wd">${w}</div>`).join('');
+
+    // Grid
+    let html = '';
+    for (let i = 0; i < startWd; i++) html += `<div class="cal-cell empty"></div>`;
+
+    for (let day = 1; day <= lastDate; day++) {
+      const k = `${monthKey}-${String(day).padStart(2,'0')}`;
+      const isToday = k === today;
+      const items = dayItems[k] || [];
+
+      // Deduplicate same book in same cell
+      const seen = new Set();
+      const unique = items.filter(item => {
+        const uid = item.kind + item.data.id;
+        if (seen.has(uid)) return false;
+        seen.add(uid); return true;
+      });
+
+      const dateHtml = isToday
+        ? `<div class="cell-date"><span class="cell-date-bubble">${day}</span></div>`
+        : `<div class="cell-date">${day}</div>`;
+
+      const barsHtml = unique.slice(0, 4).map(item => {
+        const color = colorForId(item.data.id);
+        const name = esc(item.data.name);
+        if (item.kind === 'plan') {
+          return `<div class="book-bar plan-bar" style="border-color:${color};" data-planid="${item.data.id}" title="${name}">▸ ${name}</div>`;
+        }
+        return `<div class="book-bar" style="background:${color};" data-recid="${item.data.id}" title="${name}">${name}</div>`;
+      }).join('');
+
+      const moreHtml = unique.length > 4
+        ? `<div class="more-hint">+${unique.length - 4} 项</div>` : '';
+
+      html += `<div class="cal-cell${isToday ? ' is-today' : ''}">
+        ${dateHtml}${barsHtml}${moreHtml}
+      </div>`;
+    }
+
+    document.getElementById('calGrid').innerHTML = html;
+  }
+
+  // ── Record detail ──
+  function openRecDetail(id) {
+    const r = allRecords.find(x => String(x.id) === String(id));
+    if (!r) return;
+    const icon = TYPE_ICONS[r.type] || '📌';
+    const tagsHtml = (r.tags||[]).map(t => `<span class="meta-tag">${esc(t)}</span>`).join(' ');
+    const dateStr = r.start_date && r.start_date !== r.review_date
+      ? `${r.start_date} → ${r.review_date}`
+      : (r.review_date || '');
+    const days = r.start_date && r.review_date && r.start_date !== r.review_date
+      ? Math.round((new Date(r.review_date) - new Date(r.start_date)) / 86400000) + 1
+      : null;
+
+    document.getElementById('recDialogTitle').textContent = r.name;
+    document.getElementById('recDialogBody').innerHTML = `
+      <div style="margin-bottom:12px;">
+        <div style="font-size:19px;font-weight:800;color:var(--accent-deep);margin-bottom:6px;">${icon} ${esc(r.name)}</div>
+        ${r.author ? `<div style="color:var(--muted);font-size:13px;margin-bottom:2px;">✍️ ${esc(r.author)}</div>` : ''}
+        ${r.main_characters ? `<div style="color:var(--muted);font-size:13px;">👥 ${esc(r.main_characters)}</div>` : ''}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+        <span style="font-weight:700;color:var(--accent);">★ ${r.rating} · ${getRatingLabel(r.rating)}</span>
+        <span class="meta-tag">${esc(r.type)}</span>
+        ${dateStr ? `<span class="meta-tag">📅 ${dateStr}${days ? ` · ${days}天` : ''}</span>` : ''}
+      </div>
+      ${tagsHtml ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">${tagsHtml}</div>` : ''}
+      ${r.quick_review ? `<div style="font-size:13px;color:var(--accent);font-style:italic;padding:8px 12px;background:var(--soft);border-radius:10px;border-left:3px solid var(--accent-light);margin-bottom:10px;">💬 ${esc(r.quick_review)}</div>` : ''}
+      ${r.notes ? `<div class="detail-block">${esc(r.notes)}</div>` : ''}
+    `;
+    document.getElementById('recDialog').showModal();
+  }
+
+  // ── Plan detail ──
+  function openPlanDetail(id) {
+    const p = allPlans.find(x => String(x.id) === String(id));
+    if (!p) return;
+    const tagsHtml = (p.tags||[]).map(t => `<span class="meta-tag">${esc(t)}</span>`).join(' ');
+    const dateStr = p.planned_end && p.planned_end !== p.planned_start
+      ? `${p.planned_start} → ${p.planned_end}`
+      : (p.planned_start || '');
+
+    document.getElementById('planDetailTitle').textContent = p.name;
+    document.getElementById('planDetailBody').innerHTML = `
+      <div style="font-size:18px;font-weight:700;color:var(--accent-deep);margin-bottom:8px;">${esc(p.name)}</div>
+      ${dateStr ? `<div style="color:var(--muted);font-size:13px;margin-bottom:10px;">📅 ${dateStr}</div>` : ''}
+      ${tagsHtml ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">${tagsHtml}</div>` : ''}
+      <div class="btn-row" style="flex-wrap:wrap;">
+        <button class="btn-secondary" style="flex:1;" id="btnEditPlanDetail">编辑计划</button>
+        <button class="btn-primary" style="flex:1;" id="btnMarkRead">已读 → 去记录</button>
+      </div>
+      <div style="margin-top:8px;">
+        <button class="btn-danger" style="width:100%;" id="btnDeletePlanDetail">删除计划</button>
+      </div>
+    `;
+    document.getElementById('btnEditPlanDetail').onclick = () => {
+      document.getElementById('planDetailDialog').close();
+      openPlanForm(p.id);
+    };
+    document.getElementById('btnMarkRead').onclick = () => {
+      const params = new URLSearchParams({
+        newrec: '1',
+        name: p.name || '',
+        start: p.planned_start || '',
+        end: p.planned_end || ''
+      });
+      window.location.href = `index.html?${params}`;
+    };
+    document.getElementById('btnDeletePlanDetail').onclick = async () => {
+      if (!confirm('确定删除这个计划？')) return;
+      await supabase.from('reading_plans').delete().eq('id', p.id).eq('user_id', currentUser.id);
+      document.getElementById('planDetailDialog').close();
+      await fetchData(); renderCalendar();
+    };
+    document.getElementById('planDetailDialog').showModal();
+  }
+
+  // ── Plan form ──
+  function openPlanForm(id = null) {
+    editingPlanId = id;
+    selectedPlanTags = new Set();
+    document.getElementById('planDialogTitle').textContent = id ? '编辑阅读计划' : '新增阅读计划';
+    document.getElementById('btnDeletePlan').style.display = id ? 'inline-block' : 'none';
+
+    if (id) {
+      const p = allPlans.find(x => String(x.id) === String(id));
+      if (p) {
+        document.getElementById('planName').value = p.name || '';
+        document.getElementById('planStart').value = p.planned_start || '';
+        document.getElementById('planEnd').value = p.planned_end || '';
+        selectedPlanTags = new Set(p.tags || []);
+      }
+    } else {
+      document.getElementById('planName').value = '';
+      document.getElementById('planStart').value = todayStr();
+      document.getElementById('planEnd').value = '';
+    }
+
+    renderPlanTags();
+    document.getElementById('planDialog').showModal();
+  }
+
+  function renderPlanTags() {
+    document.getElementById('planTagChips').innerHTML = ALL_TAGS.map(t =>
+      `<span class="tag-chip ${selectedPlanTags.has(t) ? 'active' : ''}" data-tag="${esc(t)}">${esc(t)}</span>`
+    ).join('');
+  }
+
+  async function savePlan() {
+    const name = document.getElementById('planName').value.trim();
+    const start = document.getElementById('planStart').value;
+    const end = document.getElementById('planEnd').value;
+    if (!name) { alert('请填写书名'); return; }
+    if (start && end && start > end) { alert('开始日期不能晚于结束日期'); return; }
+
+    const payload = {
+      name,
+      planned_start: start || null,
+      planned_end: end || null,
+      tags: [...selectedPlanTags],
+      user_id: currentUser.id
+    };
+
+    if (editingPlanId) {
+      await supabase.from('reading_plans').update(payload).eq('id', editingPlanId).eq('user_id', currentUser.id);
+    } else {
+      await supabase.from('reading_plans').insert(payload);
+    }
+
+    document.getElementById('planDialog').close();
+    await fetchData(); renderCalendar();
+  }
+
+  // ── Events ──
+  function bindEvents() {
+    document.getElementById('btnPrev').addEventListener('click', () => {
+      calMonth--; if (calMonth < 1) { calMonth = 12; calYear--; }
+      renderCalendar();
+    });
+    document.getElementById('btnNext').addEventListener('click', () => {
+      calMonth++; if (calMonth > 12) { calMonth = 1; calYear++; }
+      renderCalendar();
+    });
+
+    document.querySelectorAll('.filter-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderCalendar();
+      });
+    });
+
+    document.getElementById('btnAddPlan').addEventListener('click', () => openPlanForm());
+    document.getElementById('btnClosePlan').addEventListener('click', () => document.getElementById('planDialog').close());
+    document.getElementById('btnCloseRec').addEventListener('click', () => document.getElementById('recDialog').close());
+    document.getElementById('btnClosePlanDetail').addEventListener('click', () => document.getElementById('planDetailDialog').close());
+    document.getElementById('btnSavePlan').addEventListener('click', savePlan);
+    document.getElementById('btnDeletePlan').addEventListener('click', async () => {
+      if (!editingPlanId || !confirm('确定删除？')) return;
+      await supabase.from('reading_plans').delete().eq('id', editingPlanId).eq('user_id', currentUser.id);
+      document.getElementById('planDialog').close();
+      await fetchData(); renderCalendar();
+    });
+
+    document.getElementById('planTagChips').addEventListener('click', e => {
+      const chip = e.target.closest('[data-tag]');
+      if (!chip) return;
+      const tag = chip.dataset.tag;
+      selectedPlanTags.has(tag) ? selectedPlanTags.delete(tag) : selectedPlanTags.add(tag);
+      renderPlanTags();
+    });
+
+    document.getElementById('calGrid').addEventListener('click', e => {
+      const recEl = e.target.closest('[data-recid]');
+      const planEl = e.target.closest('[data-planid]');
+      if (recEl) openRecDetail(recEl.dataset.recid);
+      else if (planEl) openPlanDetail(planEl.dataset.planid);
+    });
+  }
+
+  init();
+</script>
+</body>
+</html>
