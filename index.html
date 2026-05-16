@@ -434,38 +434,17 @@
     .cal-day.empty { cursor: default; }
     .cal-day.empty:hover { background: transparent; }
 
-    .cal-day.in-range {
-      background: #fff0ef;
-      color: var(--accent-deep);
-      border-radius: 0;
-    }
-
-    .cal-day.range-start {
-      background: var(--accent);
-      color: #fff;
-      font-weight: 700;
-      border-radius: 6px 0 0 6px;
-    }
-
-    .cal-day.range-end {
-      background: var(--accent);
-      color: #fff;
-      font-weight: 700;
-      border-radius: 0 6px 6px 0;
-    }
-
-    .cal-day.range-start.range-end {
-      border-radius: 6px;
-    }
-
     .cal-day.has-rec {
-      background: #fff0ef;
-      color: var(--accent-deep);
-      font-weight: 700;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .cal-day.has-rec:hover {
+      filter: brightness(0.93);
     }
 
     .cal-day.selected {
-      background: var(--accent);
+      background: var(--accent) !important;
       color: #fff;
     }
 
@@ -1549,21 +1528,26 @@
     const lastDate = new Date(calYear, calMonth, 0).getDate();
     const startWd = (firstDay.getDay() + 6) % 7;
 
+    const CAL_COLORS = [
+      '#f2b3b3','#f2c9a0','#f2e8a0','#c8e0a8',
+      '#a0d4d4','#a8c0e8','#c8b0e0','#e8b0d0'
+    ];
+    const colorForRec = r => {
+      const sum = String(r.id).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+      return CAL_COLORS[sum % CAL_COLORS.length];
+    };
+
     const monthStart = `${monthKey}-01`;
     const monthEnd = `${monthKey}-${String(lastDate).padStart(2,'0')}`;
-    const rangeStartDays = new Set(), rangeEndDays = new Set(), inRangeDays = new Set();
+    const dayRecs = {};
     allRecords.forEach(r => {
-      const effectiveStart = r.start_date || r.review_date;
-      const effectiveEnd = r.review_date || r.start_date;
-      if (!effectiveStart) return;
-      if (effectiveStart > monthEnd || effectiveEnd < monthStart) return;
+      const s = r.start_date || r.review_date;
+      const e = r.review_date || r.start_date;
+      if (!s) return;
+      if (s > monthEnd || e < monthStart) return;
       for (let day = 1; day <= lastDate; day++) {
         const k = `${monthKey}-${String(day).padStart(2,'0')}`;
-        if (k >= effectiveStart && k <= effectiveEnd) {
-          if (k === effectiveStart) rangeStartDays.add(k);
-          if (k === effectiveEnd) rangeEndDays.add(k);
-          if (k > effectiveStart && k < effectiveEnd) inRangeDays.add(k);
-        }
+        if (k >= s && k <= e) { if (!dayRecs[k]) dayRecs[k] = []; dayRecs[k].push(r); }
       }
     });
 
@@ -1573,16 +1557,16 @@
     for (let i = 0; i < startWd; i++) html += `<div class="cal-day empty"></div>`;
     for (let day = 1; day <= lastDate; day++) {
       const k = `${monthKey}-${String(day).padStart(2,'0')}`;
-      const isStart = rangeStartDays.has(k), isEnd = rangeEndDays.has(k), isMid = inRangeDays.has(k);
+      const recs = dayRecs[k] || [];
       const sel = selectedDateFilter === k;
-      let cls = '';
-      if (isStart) cls += ' range-start';
-      if (isEnd) cls += ' range-end';
-      if (isMid) cls += ' in-range';
-      if (!isStart && !isEnd && !isMid) cls += '';
-      html += `<div class="cal-day${cls} ${sel ? 'selected' : ''}" data-datefilter="${k}">
-        ${day}
-      </div>`;
+      let bgStyle = '';
+      if (!sel && recs.length === 1) {
+        bgStyle = `background:${colorForRec(recs[0])};`;
+      } else if (!sel && recs.length >= 2) {
+        const c1 = colorForRec(recs[0]), c2 = colorForRec(recs[1]);
+        bgStyle = `background:linear-gradient(135deg,${c1} 50%,${c2} 50%);`;
+      }
+      html += `<div class="cal-day ${recs.length ? 'has-rec' : ''} ${sel ? 'selected' : ''}" style="${bgStyle}" data-datefilter="${k}">${day}</div>`;
     }
     html += `</div>`;
     els.calendarWrap.innerHTML = html;
