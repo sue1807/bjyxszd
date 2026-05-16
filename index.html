@@ -1196,13 +1196,17 @@
         <input id="name" type="text" placeholder="作品名称" />
       </div>
 
+      <div class="field">
+        <label for="type">类型</label>
+        <select id="type"></select>
+      </div>
       <div class="grid-2 form-grid">
         <div class="field">
-          <label for="type">类型</label>
-          <select id="type"></select>
+          <label for="startDate">开始阅读</label>
+          <input id="startDate" type="date" />
         </div>
         <div class="field">
-          <label for="reviewDate">阅读日期</label>
+          <label for="reviewDate">结束阅读</label>
           <input id="reviewDate" type="date" />
         </div>
       </div>
@@ -1323,7 +1327,7 @@
     name: $('name'), type: $('type'), rating: $('rating'),
     tagChips: $('tagChips'), customTagInput: $('customTagInput'), btnAddCustomTag: $('btnAddCustomTag'),
     notes: $('notes'), btnSave: $('btnSave'), saveState: $('saveState'),
-    reviewDate: $('reviewDate'),
+    startDate: $('startDate'), reviewDate: $('reviewDate'),
     blExtraWrap: $('blExtraWrap'), author: $('author'), mainCharacters: $('mainCharacters'),
     originalIntroWrap: $('originalIntroWrap'), originalIntroFile: $('originalIntroFile'),
     uploadHint: $('uploadHint'), uploadPreview: $('uploadPreview'),
@@ -1524,10 +1528,18 @@
     const lastDate = new Date(calYear, calMonth, 0).getDate();
     const startWd = (firstDay.getDay() + 6) % 7;
 
-    const counter = {};
+    const monthStart = `${monthKey}-01`;
+    const monthEnd = `${monthKey}-${String(lastDate).padStart(2,'0')}`;
+    const daysWithRec = new Set();
     allRecords.forEach(r => {
-      const k = getDateKey(r);
-      if (k.startsWith(monthKey)) counter[k] = (counter[k] || 0) + 1;
+      const effectiveStart = r.start_date || r.review_date;
+      const effectiveEnd = r.review_date || r.start_date;
+      if (!effectiveStart) return;
+      if (effectiveStart > monthEnd || effectiveEnd < monthStart) return;
+      for (let day = 1; day <= lastDate; day++) {
+        const k = `${monthKey}-${String(day).padStart(2,'0')}`;
+        if (k >= effectiveStart && k <= effectiveEnd) daysWithRec.add(k);
+      }
     });
 
     const wds = ['一','二','三','四','五','六','日'];
@@ -1536,7 +1548,7 @@
     for (let i = 0; i < startWd; i++) html += `<div class="cal-day empty"></div>`;
     for (let day = 1; day <= lastDate; day++) {
       const k = `${monthKey}-${String(day).padStart(2,'0')}`;
-      const has = !!counter[k];
+      const has = daysWithRec.has(k);
       const sel = selectedDateFilter === k;
       html += `<div class="cal-day ${has ? 'has-rec' : ''} ${sel ? 'selected' : ''}" data-datefilter="${k}">
         ${day}
@@ -1554,8 +1566,16 @@
     const monthFilter = selectedMonthFilter;
 
     const filtered = allRecords.filter(r => {
-      if (selectedDateFilter && getDateKey(r) !== selectedDateFilter) return false;
-      if (monthFilter && !getDateKey(r).startsWith(monthFilter)) return false;
+      if (selectedDateFilter) {
+        const s = r.start_date || r.review_date;
+        const e = r.review_date || r.start_date;
+        if (!s || selectedDateFilter < s || selectedDateFilter > e) return false;
+      }
+      if (monthFilter) {
+        const s = r.start_date || r.review_date;
+        const e = r.review_date || r.start_date;
+        if (!s || s > monthFilter + '-31' || e < monthFilter + '-01') return false;
+      }
       if (typeFilter && r.type !== typeFilter) return false;
       if (!keyword) return true;
       return [r.name, r.type, ...(r.tags||[]), r.notes||'', r.author||'', r.main_characters||''].join(' ').toLowerCase().includes(keyword);
@@ -1693,6 +1713,7 @@
         rating: Number(els.rating.value),
         tags: [...selectedTags],
         notes: els.notes.value.trim(),
+        start_date: els.startDate.value || null,
         review_date: els.reviewDate.value || null,
         author: els.author.value.trim(),
         main_characters: els.mainCharacters.value.trim(),
@@ -1743,6 +1764,7 @@
     els.name.value = r.name || '';
     els.type.value = TYPE_OPTIONS.includes(r.type) ? r.type : TYPE_OPTIONS[0];
     els.rating.value = String(r.rating ?? 8);
+    els.startDate.value = r.start_date || '';
     els.reviewDate.value = r.review_date || '';
     els.author.value = r.author || '';
     els.mainCharacters.value = r.main_characters || '';
@@ -1782,7 +1804,7 @@
     editingRecordId = null;
     els.name.value = ''; els.type.value = TYPE_OPTIONS[0];
     els.rating.value = '8'; els.notes.value = ''; els.summary.value = '';
-    els.reviewDate.value = ''; els.author.value = ''; els.mainCharacters.value = '';
+    els.startDate.value = ''; els.reviewDate.value = ''; els.author.value = ''; els.mainCharacters.value = '';
     els.customTagInput.value = ''; els.uploadPreview.innerHTML = '';
     uploadedOriginalIntroUrl = '';
     selectedTags = new Set();
@@ -1802,7 +1824,7 @@
   function saveDraft() {
     const draft = {
       name: els.name.value, type: els.type.value, rating: els.rating.value,
-      reviewDate: els.reviewDate.value, author: els.author.value,
+      startDate: els.startDate.value, reviewDate: els.reviewDate.value, author: els.author.value,
       mainCharacters: els.mainCharacters.value, summary: els.summary.value,
       notes: els.notes.value, quickReview: document.getElementById('quickReview').value,
       selectedTags: [...selectedTags], uploadedOriginalIntroUrl
@@ -1816,7 +1838,7 @@
       const raw = localStorage.getItem(getDraftKey()); if (!raw) return;
       const d = JSON.parse(raw);
       els.name.value = d.name || ''; els.type.value = d.type || TYPE_OPTIONS[0];
-      els.rating.value = d.rating || '8'; els.reviewDate.value = d.reviewDate || '';
+      els.rating.value = d.rating || '8'; els.startDate.value = d.startDate || ''; els.reviewDate.value = d.reviewDate || '';
       els.author.value = d.author || ''; els.mainCharacters.value = d.mainCharacters || '';
       els.summary.value = d.summary || ''; els.notes.value = d.notes || '';
       document.getElementById('quickReview').value = d.quickReview || '';
@@ -1934,7 +1956,7 @@
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
         <span style="font-size:16px;font-weight:700;color:var(--accent);">★ ${r.rating} · ${getRatingLabel(r.rating)}</span>
         <span class="meta-tag">${esc(r.type)}</span>
-        ${r.review_date ? `<span class="meta-tag">📅 ${r.review_date}</span>` : ''}
+        ${r.review_date ? `<span class="meta-tag">📅 ${r.start_date && r.start_date !== r.review_date ? r.start_date + ' → ' + r.review_date : r.review_date}</span>` : ''}
       </div>
       ${tagsHtml ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">${tagsHtml}</div>` : ''}
       ${r.story_summary ? `
@@ -2065,7 +2087,7 @@
     currentPage = 1; renderCalendar(); renderRecords();
   });
 
-  ['name','reviewDate','author','mainCharacters','summary','notes'].forEach(k => {
+  ['name','startDate','reviewDate','author','mainCharacters','summary','notes'].forEach(k => {
     els[k]?.addEventListener('input', saveDraft);
   document.getElementById('quickReview')?.addEventListener('input', saveDraft);
   });
