@@ -434,6 +434,30 @@
     .cal-day.empty { cursor: default; }
     .cal-day.empty:hover { background: transparent; }
 
+    .cal-day.in-range {
+      background: #fff0ef;
+      color: var(--accent-deep);
+      border-radius: 0;
+    }
+
+    .cal-day.range-start {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      border-radius: 6px 0 0 6px;
+    }
+
+    .cal-day.range-end {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .cal-day.range-start.range-end {
+      border-radius: 6px;
+    }
+
     .cal-day.has-rec {
       background: #fff0ef;
       color: var(--accent-deep);
@@ -1471,8 +1495,10 @@
     const now = new Date();
     const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
     const monthCount = allRecords.filter(r => {
-      const k = getDateKey(r);
-      return k && k.startsWith(thisMonth);
+      const s = r.start_date || r.review_date;
+      const e = r.review_date || r.start_date;
+      if (!s) return false;
+      return s <= thisMonth + '-31' && e >= thisMonth + '-01';
     }).length;
 
     els.statsOverview.innerHTML = `
@@ -1530,7 +1556,7 @@
 
     const monthStart = `${monthKey}-01`;
     const monthEnd = `${monthKey}-${String(lastDate).padStart(2,'0')}`;
-    const daysWithRec = new Set();
+    const rangeStartDays = new Set(), rangeEndDays = new Set(), inRangeDays = new Set();
     allRecords.forEach(r => {
       const effectiveStart = r.start_date || r.review_date;
       const effectiveEnd = r.review_date || r.start_date;
@@ -1538,7 +1564,11 @@
       if (effectiveStart > monthEnd || effectiveEnd < monthStart) return;
       for (let day = 1; day <= lastDate; day++) {
         const k = `${monthKey}-${String(day).padStart(2,'0')}`;
-        if (k >= effectiveStart && k <= effectiveEnd) daysWithRec.add(k);
+        if (k >= effectiveStart && k <= effectiveEnd) {
+          if (k === effectiveStart) rangeStartDays.add(k);
+          if (k === effectiveEnd) rangeEndDays.add(k);
+          if (k > effectiveStart && k < effectiveEnd) inRangeDays.add(k);
+        }
       }
     });
 
@@ -1548,9 +1578,14 @@
     for (let i = 0; i < startWd; i++) html += `<div class="cal-day empty"></div>`;
     for (let day = 1; day <= lastDate; day++) {
       const k = `${monthKey}-${String(day).padStart(2,'0')}`;
-      const has = daysWithRec.has(k);
+      const isStart = rangeStartDays.has(k), isEnd = rangeEndDays.has(k), isMid = inRangeDays.has(k);
       const sel = selectedDateFilter === k;
-      html += `<div class="cal-day ${has ? 'has-rec' : ''} ${sel ? 'selected' : ''}" data-datefilter="${k}">
+      let cls = '';
+      if (isStart) cls += ' range-start';
+      if (isEnd) cls += ' range-end';
+      if (isMid) cls += ' in-range';
+      if (!isStart && !isEnd && !isMid) cls += '';
+      html += `<div class="cal-day${cls} ${sel ? 'selected' : ''}" data-datefilter="${k}">
         ${day}
       </div>`;
     }
@@ -1608,7 +1643,7 @@
       const icon = TYPE_ICONS[r.type] || '📌';
       const tagsHtml = (r.tags||[]).map(t => `<span class="meta-tag">${esc(t)}</span>`).join('');
       const authorChars = [r.author, r.main_characters].filter(Boolean).map(s => esc(s)).join(' · ');
-      const date = r.review_date || '';
+      const dateStr = r.start_date && r.start_date !== r.review_date ? `${r.start_date} → ${r.review_date||''}` : (r.review_date || '');
       const words = (r.story_summary||'').length + (r.notes||'').length;
       const wordStr = words > 0 ? (words >= 10000 ? (words/10000).toFixed(1)+'万字' : words+'字') : '';
       return `
@@ -1620,7 +1655,7 @@
             </div>
             <div class="record-row-line2">
               <span class="meta-rating">★ ${r.rating} · ${getRatingLabel(r.rating)}</span>
-              
+              ${dateStr ? `<span class="meta-tag" style="color:var(--muted);font-size:11px;">📅 ${dateStr}</span>` : ''}
               ${wordStr ? `<span class="meta-tag">✍️ ${wordStr}</span>` : ''}
               ${r.is_public ? `<svg title="已公开" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d4c5c3" stroke-width="1.8" style="margin-left:3px;vertical-align:middle;flex-shrink:0;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>` : ''}
             </div>
@@ -1727,6 +1762,9 @@
         is_public: document.getElementById('isPublic').checked
       };
       if (!payload.name) { alert('请填写名称'); return; }
+      if (payload.start_date && payload.review_date && payload.start_date > payload.review_date) {
+        alert('开始阅读日期不能晚于结束阅读日期'); return;
+      }
       let error;
       if (editingRecordId) {
         ({ error } = await supabase.from('spirit_records')
@@ -1804,7 +1842,8 @@
     editingRecordId = null;
     els.name.value = ''; els.type.value = TYPE_OPTIONS[0];
     els.rating.value = '8'; els.notes.value = ''; els.summary.value = '';
-    els.startDate.value = ''; els.reviewDate.value = ''; els.author.value = ''; els.mainCharacters.value = '';
+    const today = new Date(); const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    els.startDate.value = ''; els.reviewDate.value = todayStr; els.author.value = ''; els.mainCharacters.value = '';
     els.customTagInput.value = ''; els.uploadPreview.innerHTML = '';
     uploadedOriginalIntroUrl = '';
     selectedTags = new Set();
@@ -1956,7 +1995,7 @@
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
         <span style="font-size:16px;font-weight:700;color:var(--accent);">★ ${r.rating} · ${getRatingLabel(r.rating)}</span>
         <span class="meta-tag">${esc(r.type)}</span>
-        ${r.review_date ? `<span class="meta-tag">📅 ${r.start_date && r.start_date !== r.review_date ? r.start_date + ' → ' + r.review_date : r.review_date}</span>` : ''}
+        ${r.review_date ? `<span class="meta-tag">📅 ${r.start_date && r.start_date !== r.review_date ? r.start_date + ' → ' + r.review_date : r.review_date}${r.start_date && r.review_date && r.start_date !== r.review_date ? ' · ' + (Math.round((new Date(r.review_date) - new Date(r.start_date)) / 86400000) + 1) + '天' : ''}</span>` : ''}
       </div>
       ${tagsHtml ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">${tagsHtml}</div>` : ''}
       ${r.story_summary ? `
