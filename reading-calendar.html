@@ -215,7 +215,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       cursor: pointer;
-      color: #3d2f2d;
+      color: var(--accent-deep);
       line-height: 1.5;
       transition: filter .1s;
     }
@@ -663,16 +663,17 @@
   }
 
   async function fetchData() {
-    try {
-    const [recRes, planRes] = await Promise.all([
-      supabase.from('spirit_records').select('*').eq('user_id', currentUser.id),
-      supabase.from('reading_plans').select('*').eq('user_id', currentUser.id)
-    ]);
+    // 先单独拉已读记录，保证主数据可用
+    const recRes = await supabase.from('spirit_records').select('*').eq('user_id', currentUser.id);
     allRecords = recRes.data || [];
-    allPlans = planRes.data || [];
-    } catch (e) {
-      console.error('fetchData error:', e);
-      allRecords = allRecords.length ? allRecords : [];
+
+    // 计划表单独请求，加 5s 超时保护
+    try {
+      const planPromise = supabase.from('reading_plans').select('*').eq('user_id', currentUser.id);
+      const timeout = new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 5000));
+      const planRes = await Promise.race([planPromise, timeout]);
+      allPlans = planRes.data || [];
+    } catch {
       allPlans = [];
     }
   }
