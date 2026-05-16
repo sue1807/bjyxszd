@@ -2027,20 +2027,23 @@
       setAuthStatus('未找到 Supabase 配置'); return;
     }
     supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const { data: { session } } = await supabase.auth.getSession();
-    currentUser = session?.user ?? null;
 
+    let initialResolved = false;
     supabase.auth.onAuthStateChange(async (_event, session) => {
       currentUser = session?.user ?? null;
-      if (currentUser) onLogin(); else showScreen('auth');
+      if (!initialResolved) {
+        initialResolved = true;
+        if (currentUser) {
+          onLogin();
+        } else {
+          showScreen('auth');
+          const rem = localStorage.getItem('remembered_login_email');
+          if (rem) els.email.value = rem;
+        }
+      } else {
+        if (currentUser) onLogin(); else showScreen('auth');
+      }
     });
-
-    if (currentUser) { onLogin(); }
-    else {
-      showScreen('auth');
-      const rem = localStorage.getItem('remembered_login_email');
-      if (rem) els.email.value = rem;
-    }
   }
 
   // ── Events ──
