@@ -645,6 +645,10 @@
         const now = new Date();
         calYear = now.getFullYear();
         calMonth = now.getMonth() + 1;
+        // 立刻渲染月份标签，不等数据
+        document.getElementById('monthLabel').textContent = `${calYear}年${calMonth}月`;
+        document.getElementById('calGrid').innerHTML =
+          '<div style="padding:24px;color:#a08880;font-size:13px;grid-column:1/-1;">数据加载中…</div>';
         try {
           await fetchData();
           renderCalendar();
@@ -652,7 +656,6 @@
         } catch (err) {
           document.getElementById('calGrid').innerHTML =
             `<div style="padding:24px;color:#c96060;font-size:13px;grid-column:1/-1;">加载出错：${err.message}</div>`;
-          document.getElementById('monthLabel').textContent = `${calYear}年${calMonth}月`;
           console.error(err);
         }
       }
