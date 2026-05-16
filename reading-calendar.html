@@ -662,20 +662,29 @@
     });
   }
 
-  async function fetchData() {
-    // 先单独拉已读记录，保证主数据可用
-    const recRes = await supabase.from('spirit_records').select('*').eq('user_id', currentUser.id);
-    allRecords = recRes.data || [];
+  function withTimeout(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise((_, r) => setTimeout(() => r(new Error('timeout')), ms))
+    ]);
+  }
 
-    // 计划表单独请求，加 5s 超时保护
+  async function fetchData() {
     try {
-      const planPromise = supabase.from('reading_plans').select('*').eq('user_id', currentUser.id);
-      const timeout = new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 5000));
-      const planRes = await Promise.race([planPromise, timeout]);
+      const recRes = await withTimeout(
+        supabase.from('spirit_records').select('id,name,type,start_date,review_date,rating,rating_writing,rating_plot,rating_character,tags,notes,quick_review,author,main_characters').eq('user_id', currentUser.id),
+        6000
+      );
+      allRecords = recRes.data || [];
+    } catch { allRecords = []; }
+
+    try {
+      const planRes = await withTimeout(
+        supabase.from('reading_plans').select('*').eq('user_id', currentUser.id),
+        6000
+      );
       allPlans = planRes.data || [];
-    } catch {
-      allPlans = [];
-    }
+    } catch { allPlans = []; }
   }
 
   // ── Render ──
