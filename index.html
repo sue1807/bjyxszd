@@ -1494,12 +1494,7 @@
 
     const now = new Date();
     const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    const monthCount = allRecords.filter(r => {
-      const s = r.start_date || r.review_date;
-      const e = r.review_date || r.start_date;
-      if (!s) return false;
-      return s <= thisMonth + '-31' && e >= thisMonth + '-01';
-    }).length;
+    const monthCount = allRecords.filter(r => r.review_date && r.review_date.startsWith(thisMonth)).length;
 
     els.statsOverview.innerHTML = `
       <div class="stat-kpi-row">
@@ -1606,11 +1601,7 @@
         const e = r.review_date || r.start_date;
         if (!s || selectedDateFilter < s || selectedDateFilter > e) return false;
       }
-      if (monthFilter) {
-        const s = r.start_date || r.review_date;
-        const e = r.review_date || r.start_date;
-        if (!s || s > monthFilter + '-31' || e < monthFilter + '-01') return false;
-      }
+      if (monthFilter && (!r.review_date || !r.review_date.startsWith(monthFilter))) return false;
       if (typeFilter && r.type !== typeFilter) return false;
       if (!keyword) return true;
       return [r.name, r.type, ...(r.tags||[]), r.notes||'', r.author||'', r.main_characters||''].join(' ').toLowerCase().includes(keyword);
@@ -1643,7 +1634,7 @@
       const icon = TYPE_ICONS[r.type] || '📌';
       const tagsHtml = (r.tags||[]).map(t => `<span class="meta-tag">${esc(t)}</span>`).join('');
       const authorChars = [r.author, r.main_characters].filter(Boolean).map(s => esc(s)).join(' · ');
-      const dateStr = r.start_date && r.start_date !== r.review_date ? `${r.start_date} → ${r.review_date||''}` : (r.review_date || '');
+      const dateStr = r.review_date || '';
       const words = (r.story_summary||'').length + (r.notes||'').length;
       const wordStr = words > 0 ? (words >= 10000 ? (words/10000).toFixed(1)+'万字' : words+'字') : '';
       return `
