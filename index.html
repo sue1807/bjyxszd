@@ -808,11 +808,36 @@
       box-shadow: 0 24px 60px rgba(0,0,0,0.18);
       max-height: 92vh;
       max-height: 92dvh;
+      margin: auto;
+    }
+
+    /* ── Lightbox ── */
+    #imgLightbox {
+      display: none;
       position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      max-width: 100vw;
+      max-height: 100vh;
       margin: 0;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      background: rgba(0,0,0,0.88);
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+    }
+    #imgLightbox[open] { display: flex; }
+    #imgLightbox::backdrop { display: none; }
+    #imgLightbox img {
+      max-width: 92vw;
+      max-height: 92dvh;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
     }
 
     dialog::backdrop {
@@ -1319,6 +1344,11 @@
       <div class="draft-note" id="draftState">草稿未保存</div>
     </div>
   </div>
+</dialog>
+
+<!-- Lightbox -->
+<dialog id="imgLightbox">
+  <img id="imgLightboxImg" src="" alt="" />
 </dialog>
 
 <script src="config.js"></script>
@@ -2025,7 +2055,7 @@
           <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">读后感</div>
           <div style="font-size:14px;line-height:1.8;color:var(--text);background:var(--soft);padding:12px;border-radius:12px;white-space:pre-wrap;">${esc(r.notes)}</div>
         </div>` : ''}
-      ${r.cover_url ? `<img src="${esc(r.cover_url)}" style="max-width:100%;border-radius:12px;margin-top:8px;" />` : ''}
+      ${r.cover_url ? `<img src="${esc(r.cover_url)}" onclick="openLightbox(this.src)" style="max-width:100%;border-radius:12px;margin-top:8px;cursor:zoom-in;" />` : ''}
       <div style="display:flex;gap:8px;margin-top:16px;">
         <button class="btn-secondary" data-edit="${r.id}" onclick="document.getElementById('viewDialog').close();">编辑</button>
         <button class="btn-danger" data-delete="${r.id}" onclick="document.getElementById('viewDialog').close();">删除</button>
@@ -2247,6 +2277,16 @@
   });
 
   bootstrap();
+
+  // ── Lightbox ──
+  window.openLightbox = (src) => {
+    document.getElementById('imgLightboxImg').src = src;
+    document.getElementById('imgLightbox').showModal();
+  };
+  document.getElementById('imgLightbox').addEventListener('click', () => {
+    document.getElementById('imgLightbox').close();
+    document.getElementById('imgLightboxImg').src = '';
+  });
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/bjyxszd/sw.js');
