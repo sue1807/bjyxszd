@@ -206,19 +206,34 @@
 
     /* ── Book bars ── */
     .book-bar {
-      display: block;
-      padding: 2px 5px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 5px 2px 3px;
       border-radius: 3px;
       margin-bottom: 2px;
       font-size: 10px;
       font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
       cursor: pointer;
       color: var(--accent-deep);
       line-height: 1.5;
       transition: filter .1s;
+      overflow: hidden;
+    }
+
+    .bar-thumb {
+      width: 14px;
+      height: 20px;
+      object-fit: cover;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .bar-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
     }
 
     .book-bar:hover { filter: brightness(0.88); }
@@ -610,6 +625,12 @@
           <button type="button" id="btnAddPlanTag" class="btn-secondary" style="white-space:nowrap;padding:6px 12px;font-size:13px;">添加</button>
         </div>
       </div>
+      <div class="field">
+        <label>封面截图</label>
+        <input id="planCoverFile" type="file" accept="image/*" />
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;" id="planUploadHint">支持 jpg/png/webp，自动压缩</div>
+        <div id="planUploadPreview" style="margin-top:8px;"></div>
+      </div>
       <div class="btn-row">
         <button class="btn-primary" id="btnSavePlan" style="flex:1;">保存</button>
         <button class="btn-danger" id="btnDeletePlan" style="display:none;">删除</button>
@@ -738,7 +759,7 @@
   async function fetchData() {
     try {
       const recRes = await withTimeout(
-        supabase.from('spirit_records').select('id,name,type,start_date,review_date,rating,rating_writing,rating_plot,rating_character,tags,notes,quick_review,author,main_characters').eq('user_id', currentUser.id),
+        supabase.from('spirit_records').select('id,name,type,start_date,review_date,rating,rating_writing,rating_plot,rating_character,tags,notes,quick_review,author,main_characters,cover_url').eq('user_id', currentUser.id),
         6000
       );
       allRecords = recRes.data || [];
@@ -822,9 +843,11 @@
         const color = colorForId(item.data.id);
         const name = esc(item.data.name);
         if (item.kind === 'plan') {
-          return `<div class="book-bar plan-bar" style="border-color:${color};" data-planid="${item.data.id}" title="${name}">▸ ${name}</div>`;
+          const thumb = item.data.cover_url ? `<img class="bar-thumb" src="${esc(item.data.cover_url)}" />` : '';
+          return `<div class="book-bar plan-bar" style="border-color:${color};" data-planid="${item.data.id}" title="${name}">${thumb}<span class="bar-name">▸ ${name}</span></div>`;
         }
-        return `<div class="book-bar" style="background:${color};" data-recid="${item.data.id}" title="${name}">${name}</div>`;
+        const thumb = item.data.cover_url ? `<img class="bar-thumb" src="${esc(item.data.cover_url)}" />` : '';
+        return `<div class="book-bar" style="background:${color};" data-recid="${item.data.id}" title="${name}">${thumb}<span class="bar-name">${name}</span></div>`;
       }).join('');
 
       const moreHtml = unique.length > 4
@@ -853,6 +876,7 @@
 
     document.getElementById('recDialogTitle').textContent = r.name;
     document.getElementById('recDialogBody').innerHTML = `
+      ${r.cover_url ? `<div style="text-align:center;margin-bottom:14px;"><img src="${esc(r.cover_url)}" style="max-height:160px;max-width:110px;object-fit:cover;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,0.15);" /></div>` : ''}
       <div style="margin-bottom:12px;">
         <div style="font-size:19px;font-weight:800;color:var(--accent-deep);margin-bottom:6px;">${icon} ${esc(r.name)}</div>
         ${r.author ? `<div style="color:var(--muted);font-size:13px;margin-bottom:2px;">✍️ ${esc(r.author)}</div>` : ''}
@@ -881,6 +905,7 @@
 
     document.getElementById('planDetailTitle').textContent = p.name;
     document.getElementById('planDetailBody').innerHTML = `
+      ${p.cover_url ? `<div style="text-align:center;margin-bottom:14px;"><img src="${esc(p.cover_url)}" style="max-height:160px;max-width:110px;object-fit:cover;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,0.15);" /></div>` : ''}
       <div style="font-size:18px;font-weight:700;color:var(--accent-deep);margin-bottom:4px;">${esc(p.name)}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
         ${p.type ? `<span class="meta-tag">${esc(p.type)}</span>` : ''}
@@ -941,8 +966,66 @@
       document.getElementById('planStart').value = todayStr();
     }
 
+    // 重置上传状态
+    uploadedPlanCoverUrl = '';
+    document.getElementById('planCoverFile').value = '';
+    document.getElementById('planUploadHint').textContent = '支持 jpg/png/webp，自动压缩';
+    if (id) {
+      const p = allPlans.find(x => String(x.id) === String(id));
+      if (p?.cover_url) {
+        uploadedPlanCoverUrl = p.cover_url;
+        document.getElementById('planUploadPreview').innerHTML = `<img src="${esc(p.cover_url)}" style="max-width:100%;max-height:120px;object-fit:cover;border-radius:8px;" />`;
+      } else {
+        document.getElementById('planUploadPreview').innerHTML = '';
+      }
+    } else {
+      document.getElementById('planUploadPreview').innerHTML = '';
+    }
+
     renderPlanTags();
     document.getElementById('planDialog').showModal();
+  }
+
+  // ── Image upload ──
+  let uploadedPlanCoverUrl = '';
+
+  async function compressImage(file, maxW = 1600, quality = 0.82) {
+    return new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          let { width: w, height: h } = img;
+          if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          canvas.toBlob(blob => {
+            if (!blob) return rej(new Error('压缩失败'));
+            res(new File([blob], 'cover.jpg', { type: 'image/jpeg' }));
+          }, 'image/jpeg', quality);
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function uploadPlanImage(file) {
+    const hint = document.getElementById('planUploadHint');
+    const preview = document.getElementById('planUploadPreview');
+    hint.textContent = file.size > 500*1024 ? '压缩中…' : '上传中…';
+    try {
+      const uploadFile = file.size > 500*1024 ? await compressImage(file) : file;
+      hint.textContent = '上传中…';
+      const path = `${currentUser.id}/plan_${Date.now()}.jpg`;
+      const { error } = await supabase.storage.from('covers').upload(path, uploadFile, { contentType: 'image/jpeg', upsert: false });
+      if (error) { hint.textContent = '上传失败'; return; }
+      const { data } = supabase.storage.from('covers').getPublicUrl(path);
+      uploadedPlanCoverUrl = data.publicUrl;
+      hint.textContent = '上传成功';
+      preview.innerHTML = `<img src="${esc(uploadedPlanCoverUrl)}" style="max-width:100%;max-height:120px;object-fit:cover;border-radius:8px;" />`;
+    } catch { hint.textContent = '处理失败'; }
   }
 
   function renderPlanTags() {
@@ -978,6 +1061,7 @@
       type: type || null,
       author: author || null,
       planned_start: start || null,
+      cover_url: uploadedPlanCoverUrl || null,
       tags: [...selectedPlanTags],
       user_id: currentUser.id
     };
@@ -986,7 +1070,7 @@
 
     // 若扩展列不存在则回退只保存核心字段
     if (err) {
-      const { type: _t, author: _a, ...fallback } = payload;
+      const { type: _t, author: _a, cover_url: _c, ...fallback } = payload;
       err = await doSave(fallback);
     }
 
@@ -1017,6 +1101,10 @@
     });
 
     document.getElementById('btnRefresh').addEventListener('click', () => loadDataAndRefresh());
+    document.getElementById('planCoverFile').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) uploadPlanImage(file);
+    });
     document.getElementById('btnAddPlan').addEventListener('click', () => openPlanForm());
     document.getElementById('btnClosePlan').addEventListener('click', () => document.getElementById('planDialog').close());
     document.getElementById('btnCloseRec').addEventListener('click', () => document.getElementById('recDialog').close());
