@@ -118,32 +118,6 @@
       color: var(--accent-deep);
     }
 
-    /* ── Filter tabs ── */
-    .filter-tabs {
-      background: var(--card);
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      padding: 0 16px;
-    }
-
-    .filter-tab {
-      padding: 10px 14px;
-      font-size: 13px;
-      border: none;
-      border-bottom: 2px solid transparent;
-      background: none;
-      cursor: pointer;
-      color: var(--muted);
-      font-family: inherit;
-      font-weight: 400;
-      transition: .15s;
-    }
-
-    .filter-tab.active {
-      color: var(--accent-deep);
-      font-weight: 600;
-      border-bottom-color: var(--accent);
-    }
 
     /* ── 小说仓库 ── */
     #warehouseSection { background: var(--card); }
@@ -713,15 +687,9 @@
     <span class="month-label" id="monthLabel"></span>
     <button class="nav-btn" id="btnNext">›</button>
     <button class="refresh-btn" id="btnRefresh" title="刷新数据">↻</button>
+    <button class="refresh-btn" id="btnGoWarehouse" title="小说仓库">🗄</button>
   </div>
   <div class="data-status" id="dataStatus"></div>
-
-  <div class="filter-tabs">
-    <button class="filter-tab active" data-filter="all">全部</button>
-    <button class="filter-tab" data-filter="records">已读</button>
-    <button class="filter-tab" data-filter="plans">计划</button>
-    <button class="filter-tab" data-filter="warehouse">📌 仓库</button>
-  </div>
 
   <div id="calendarWrap">
     <div class="legend">
@@ -922,7 +890,6 @@
   let supabase, currentUser;
   let allRecords = [], allPlans = [];
   let calYear, calMonth;
-  let currentFilter = 'all';
   let editingPlanId = null;
   let selectedPlanTags = new Set();
 
@@ -1018,19 +985,15 @@
       }
     };
 
-    if (currentFilter !== 'plans') {
-      allRecords.forEach(r => {
-        const d = r.review_date;
-        if (d) addItem(d, d, { kind: 'record', data: r });
-      });
-    }
+    allRecords.forEach(r => {
+      const d = r.review_date;
+      if (d) addItem(d, d, { kind: 'record', data: r });
+    });
 
-    if (currentFilter !== 'records') {
-      allPlans.forEach(p => {
-        const d = p.planned_start;
-        if (d) addItem(d, d, { kind: 'plan', data: p });
-      });
-    }
+    allPlans.forEach(p => {
+      const d = p.planned_start;
+      if (d) addItem(d, d, { kind: 'plan', data: p });
+    });
 
     // Weekdays
     document.getElementById('calWeekdays').innerHTML =
@@ -1308,17 +1271,14 @@
       renderCalendar();
     });
 
-    document.querySelectorAll('.filter-tab').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentFilter = btn.dataset.filter;
-        const isWarehouse = currentFilter === 'warehouse';
-        document.getElementById('calendarWrap').classList.toggle('hidden', isWarehouse);
-        document.getElementById('warehouseSection').classList.toggle('hidden', !isWarehouse);
-        document.getElementById('btnAddPlan').title = isWarehouse ? '加入仓库' : '新增阅读计划';
-        if (isWarehouse) fetchWarehouse(); else renderCalendar();
-      });
+    let inWarehouse = false;
+    document.getElementById('btnGoWarehouse').addEventListener('click', () => {
+      inWarehouse = !inWarehouse;
+      document.getElementById('calendarWrap').classList.toggle('hidden', inWarehouse);
+      document.getElementById('warehouseSection').classList.toggle('hidden', !inWarehouse);
+      document.getElementById('btnAddPlan').title = inWarehouse ? '加入仓库' : '新增阅读计划';
+      document.getElementById('btnGoWarehouse').style.color = inWarehouse ? 'var(--accent-deep)' : '';
+      if (inWarehouse) fetchWarehouse();
     });
 
     document.getElementById('btnRefresh').addEventListener('click', () => loadDataAndRefresh());
@@ -1327,7 +1287,7 @@
       if (file) uploadPlanImage(file);
     });
     document.getElementById('btnAddPlan').addEventListener('click', () => {
-      if (currentFilter === 'warehouse') openWhForm(); else openPlanForm();
+      if (inWarehouse) openWhForm(); else openPlanForm();
     });
     document.getElementById('btnClosePlan').addEventListener('click', () => document.getElementById('planDialog').close());
     document.getElementById('btnCloseRec').addEventListener('click', () => document.getElementById('recDialog').close());
