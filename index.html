@@ -247,7 +247,39 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
     }
+    .user-badge:hover { background: #edddd8; }
+
+    /* ── User dropdown ── */
+    .user-menu-wrap { position: relative; display: inline-block; }
+    .user-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+      min-width: 130px;
+      z-index: 300;
+      overflow: hidden;
+    }
+    .user-dropdown.open { display: block; }
+    .user-dropdown button {
+      display: block;
+      width: 100%;
+      padding: 11px 16px;
+      text-align: left;
+      background: none;
+      border: none;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .user-dropdown button:hover { background: var(--soft); }
 
     /* ─── LAYOUT ───────────────────────────── */
     .container {
@@ -1157,10 +1189,15 @@
         <span class="brand-name" id="btnAbout" style="cursor:pointer;" title="关于">五谷丰登</span>
       </div>
       <div class="header-right">
-        <span class="user-badge" id="userEmail">-</span>
+        <div class="user-menu-wrap" id="userMenuWrap">
+          <span class="user-badge" id="userEmail">-</span>
+          <div class="user-dropdown" id="userDropdown">
+            <button id="btnChangePwd">修改密码</button>
+            <button id="btnChangeNick">修改昵称</button>
+          </div>
+        </div>
         <a href="reading-calendar.html" style="text-decoration:none;"><button class="btn-ghost btn-sm">阅读日历</button></a>
         <a href="public.html" style="text-decoration:none;"><button class="btn-ghost btn-sm">公共书架</button></a>
-        <button class="btn-ghost btn-sm" id="btnChangePwd">改密码</button>
         <button class="btn-ghost btn-sm" id="btnSignOut">退出</button>
       </div>
     </div>
@@ -1365,6 +1402,24 @@
       </div>
       <div id="pwdStatus" style="font-size:13px;color:var(--accent);margin-bottom:12px;min-height:18px;"></div>
       <button class="btn-primary" id="btnSavePwd" style="width:100%;">保存</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- Change Nickname Dialog -->
+<dialog id="changeNickDialog">
+  <div class="modal-wrap">
+    <div class="modal-head">
+      <span class="modal-title">修改昵称</span>
+      <button class="btn-ghost" id="btnCloseNick">关闭</button>
+    </div>
+    <div class="modal-body" style="padding:16px 20px 24px;">
+      <div class="field" style="margin-bottom:16px;">
+        <label for="newNick">新昵称</label>
+        <input id="newNick" type="text" placeholder="输入新昵称" />
+      </div>
+      <div id="nickStatus" style="font-size:13px;color:var(--accent);margin-bottom:12px;min-height:18px;"></div>
+      <button class="btn-primary" id="btnSaveNick" style="width:100%;">保存</button>
     </div>
   </div>
 </dialog>
@@ -2301,8 +2356,17 @@
 
   bootstrap();
 
+  // ── User dropdown toggle ──
+  const userDropdown = document.getElementById('userDropdown');
+  document.getElementById('userEmail').addEventListener('click', (e) => {
+    e.stopPropagation();
+    userDropdown.classList.toggle('open');
+  });
+  document.addEventListener('click', () => userDropdown.classList.remove('open'));
+
   // ── Change Password ──
   document.getElementById('btnChangePwd').addEventListener('click', () => {
+    userDropdown.classList.remove('open');
     document.getElementById('newPwd').value = '';
     document.getElementById('confirmPwd').value = '';
     document.getElementById('pwdStatus').textContent = '';
@@ -2323,6 +2387,29 @@
     status.style.color = 'green';
     status.textContent = '密码已更新 ✓';
     setTimeout(() => document.getElementById('changePwdDialog').close(), 1200);
+  });
+
+  // ── Change Nickname ──
+  document.getElementById('btnChangeNick').addEventListener('click', async () => {
+    userDropdown.classList.remove('open');
+    const { data } = await supabase.from('profiles').select('nickname').eq('id', currentUser.id).single();
+    document.getElementById('newNick').value = data?.nickname || '';
+    document.getElementById('nickStatus').textContent = '';
+    document.getElementById('changeNickDialog').showModal();
+  });
+  document.getElementById('btnCloseNick').addEventListener('click', () => {
+    document.getElementById('changeNickDialog').close();
+  });
+  document.getElementById('btnSaveNick').addEventListener('click', async () => {
+    const nick = document.getElementById('newNick').value.trim();
+    const status = document.getElementById('nickStatus');
+    if (!nick) { status.textContent = '昵称不能为空'; return; }
+    status.textContent = '保存中…';
+    const { error } = await supabase.from('profiles').upsert({ id: currentUser.id, nickname: nick });
+    if (error) { status.textContent = '失败：' + error.message; return; }
+    status.style.color = 'green';
+    status.textContent = '昵称已更新 ✓';
+    setTimeout(() => document.getElementById('changeNickDialog').close(), 1000);
   });
 
   // ── Lightbox ──
