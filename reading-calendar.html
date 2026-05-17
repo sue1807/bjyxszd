@@ -471,6 +471,39 @@
       background: transparent;
     }
 
+    /* ── Data status bar ── */
+    .data-status {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      padding: 3px 16px;
+      background: var(--bg);
+      min-height: 20px;
+    }
+
+    .refresh-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 8px;
+      background: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 17px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      line-height: 1;
+      font-family: inherit;
+      transition: color .15s;
+    }
+
+    .refresh-btn:hover { color: var(--accent); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .refresh-btn.spinning { animation: spin 0.8s linear infinite; }
+
     /* ── Mobile ── */
     @media (max-width: 480px) {
       .cal-cell { min-height: 68px; }
@@ -497,7 +530,9 @@
     <button class="nav-btn" id="btnPrev">‹</button>
     <span class="month-label" id="monthLabel"></span>
     <button class="nav-btn" id="btnNext">›</button>
+    <button class="refresh-btn" id="btnRefresh" title="刷新数据">↻</button>
   </div>
+  <div class="data-status" id="dataStatus"></div>
 
   <div class="filter-tabs">
     <button class="filter-tab active" data-filter="all">全部</button>
@@ -655,9 +690,20 @@
     });
   }
 
+  function setStatus(msg) {
+    const el = document.getElementById('dataStatus');
+    if (el) el.textContent = msg;
+  }
+
   async function loadDataAndRefresh() {
+    const btn = document.getElementById('btnRefresh');
+    if (btn) btn.classList.add('spinning');
+    setStatus('正在加载数据…');
     await fetchData();
     renderCalendar();
+    const total = allRecords.length + allPlans.length;
+    setStatus(total > 0 ? `已加载 ${allRecords.length} 条记录、${allPlans.length} 个计划` : '暂无数据');
+    if (btn) btn.classList.remove('spinning');
   }
 
   function withTimeout(promise, ms) {
@@ -924,6 +970,7 @@
       });
     });
 
+    document.getElementById('btnRefresh').addEventListener('click', () => loadDataAndRefresh());
     document.getElementById('btnAddPlan').addEventListener('click', () => openPlanForm());
     document.getElementById('btnClosePlan').addEventListener('click', () => document.getElementById('planDialog').close());
     document.getElementById('btnCloseRec').addEventListener('click', () => document.getElementById('recDialog').close());
