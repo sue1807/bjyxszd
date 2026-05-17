@@ -264,9 +264,11 @@
     /* ── Dialogs ── */
     dialog {
       width: min(480px, calc(100vw - 20px));
+      max-width: calc(100vw - 20px);
       border: none;
       border-radius: 20px;
       padding: 0;
+      overflow: hidden;
       box-shadow: 0 20px 60px rgba(0,0,0,0.18);
       max-height: 88vh;
       max-height: 88dvh;
@@ -288,6 +290,7 @@
       max-height: 88vh;
       max-height: 88dvh;
       overflow-y: auto;
+      overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
     }
