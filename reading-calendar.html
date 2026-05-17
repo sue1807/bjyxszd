@@ -569,15 +569,13 @@
         <label>书名</label>
         <input id="planName" type="text" placeholder="作品名称" />
       </div>
-      <div class="grid-2">
-        <div class="field">
-          <label>计划开始</label>
-          <input id="planStart" type="date" />
-        </div>
-        <div class="field">
-          <label>计划结束</label>
-          <input id="planEnd" type="date" />
-        </div>
+      <div class="field">
+        <label>作者</label>
+        <input id="planAuthor" type="text" placeholder="作者名" />
+      </div>
+      <div class="field">
+        <label>计划开始</label>
+        <input id="planStart" type="date" />
       </div>
       <div class="field">
         <label>标签</label>
@@ -860,8 +858,9 @@
 
     document.getElementById('planDetailTitle').textContent = p.name;
     document.getElementById('planDetailBody').innerHTML = `
-      <div style="font-size:18px;font-weight:700;color:var(--accent-deep);margin-bottom:8px;">${esc(p.name)}</div>
-      ${dateStr ? `<div style="color:var(--muted);font-size:13px;margin-bottom:10px;">📅 ${dateStr}</div>` : ''}
+      <div style="font-size:18px;font-weight:700;color:var(--accent-deep);margin-bottom:4px;">${esc(p.name)}</div>
+      ${p.author ? `<div style="color:var(--muted);font-size:13px;margin-bottom:6px;">✍️ ${esc(p.author)}</div>` : ''}
+      ${p.planned_start ? `<div style="color:var(--muted);font-size:13px;margin-bottom:10px;">📅 计划 ${p.planned_start}</div>` : ''}
       ${tagsHtml ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">${tagsHtml}</div>` : ''}
       <div class="btn-row" style="flex-wrap:wrap;">
         <button class="btn-secondary" style="flex:1;" id="btnEditPlanDetail">编辑计划</button>
@@ -879,8 +878,8 @@
       const params = new URLSearchParams({
         newrec: '1',
         name: p.name || '',
-        start: p.planned_start || '',
-        end: p.planned_end || ''
+        author: p.author || '',
+        start: p.planned_start || ''
       });
       window.location.href = `index.html?${params}`;
     };
@@ -904,14 +903,14 @@
       const p = allPlans.find(x => String(x.id) === String(id));
       if (p) {
         document.getElementById('planName').value = p.name || '';
+        document.getElementById('planAuthor').value = p.author || '';
         document.getElementById('planStart').value = p.planned_start || '';
-        document.getElementById('planEnd').value = p.planned_end || '';
         selectedPlanTags = new Set(p.tags || []);
       }
     } else {
       document.getElementById('planName').value = '';
+      document.getElementById('planAuthor').value = '';
       document.getElementById('planStart').value = todayStr();
-      document.getElementById('planEnd').value = '';
     }
 
     renderPlanTags();
@@ -926,15 +925,14 @@
 
   async function savePlan() {
     const name = document.getElementById('planName').value.trim();
+    const author = document.getElementById('planAuthor').value.trim();
     const start = document.getElementById('planStart').value;
-    const end = document.getElementById('planEnd').value;
     if (!name) { alert('请填写书名'); return; }
-    if (start && end && start > end) { alert('开始日期不能晚于结束日期'); return; }
 
     const payload = {
       name,
+      author: author || null,
       planned_start: start || null,
-      planned_end: end || null,
       tags: [...selectedPlanTags],
       user_id: currentUser.id
     };

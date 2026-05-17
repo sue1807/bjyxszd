@@ -1725,6 +1725,7 @@
       if (params.get('newrec') === '1') {
         resetForm();
         els.name.value = params.get('name') || '';
+        if (els.author) els.author.value = params.get('author') || '';
         els.startDate.value = params.get('start') || '';
         els.reviewDate.value = params.get('end') || '';
         history.replaceState({}, '', location.pathname);
