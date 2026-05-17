@@ -89,6 +89,7 @@
       padding: 10px 20px;
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 12px;
     }
 
@@ -111,7 +112,7 @@
     .nav-btn:hover { background: var(--soft); }
 
     .month-label {
-      flex: 1;
+      width: 120px;
       text-align: center;
       font-size: 15px;
       font-weight: 700;
@@ -687,7 +688,7 @@
     <span class="month-label" id="monthLabel"></span>
     <button class="nav-btn" id="btnNext">›</button>
     <button class="refresh-btn" id="btnRefresh" title="刷新数据">↻</button>
-    <button class="refresh-btn" id="btnGoWarehouse" title="小说仓库">🗄</button>
+    <button class="refresh-btn" id="btnGoWarehouse" title="小说仓库" style="width:auto;padding:0 10px;font-size:12px;gap:4px;display:flex;align-items:center;">🗄 去仓库</button>
   </div>
   <div class="data-status" id="dataStatus"></div>
 
@@ -836,6 +837,10 @@
       <div class="field">
         <label>标签</label>
         <div id="whTagChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
+        <div style="display:flex;gap:6px;margin-top:4px;">
+          <input id="whCustomTag" type="text" placeholder="自定义标签" style="flex:1;" />
+          <button type="button" id="btnAddWhTag" class="btn-secondary" style="white-space:nowrap;padding:6px 12px;font-size:13px;">添加</button>
+        </div>
       </div>
       <div class="field">
         <label>封面截图</label>
@@ -1484,6 +1489,17 @@
 
   document.getElementById('btnCloseWhDetail').addEventListener('click', () => document.getElementById('warehouseDetailDialog').close());
   document.getElementById('btnCloseWhForm').addEventListener('click', () => document.getElementById('warehouseFormDialog').close());
+
+  const addWhTag = () => {
+    const input = document.getElementById('whCustomTag');
+    const val = input.value.trim();
+    if (val) { selectedWhTags.add(val); input.value = ''; renderWhTagChips(); }
+  };
+  document.getElementById('btnAddWhTag').addEventListener('click', addWhTag);
+  document.getElementById('whCustomTag').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addWhTag(); }
+  });
+
   document.getElementById('btnWhUpload').addEventListener('click', () => document.getElementById('whCoverFile').click());
   document.getElementById('whCoverFile').addEventListener('change', async (e) => {
     const file = e.target.files[0]; if (!file) return;
