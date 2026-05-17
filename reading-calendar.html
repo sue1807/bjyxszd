@@ -46,16 +46,23 @@
 
     /* ── Header ── */
     .app-header {
-      background: linear-gradient(135deg, #fdf0ec, #f8e8e4);
-      border-bottom: 1px solid var(--line);
-      padding: 0 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(247,243,238,0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(234,216,208,0.6);
+    }
+
+    .header-inner {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 16px;
       height: 52px;
       display: flex;
       align-items: center;
       gap: 12px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
     }
 
     .back-link {
@@ -80,6 +87,20 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    /* ── Page container ── */
+    .cal-container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 20px 16px 100px;
+    }
+
+    .cal-card {
+      background: #fff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 2px 24px rgba(0,0,0,0.07);
     }
 
     /* ── Month nav ── */
@@ -659,7 +680,7 @@
       .book-bar { font-size: 9px; padding: 1px 3px; }
       .cell-date { font-size: 10px; }
       .month-label { font-size: 14px; }
-      .app-header { padding: 0 14px; }
+      .cal-container { padding: 12px 10px 100px; }
       .month-nav { padding: 8px 14px; }
     }
 
@@ -678,38 +699,42 @@
 
 <div id="appScreen" class="hidden">
   <header class="app-header">
-    <a href="index.html" class="back-link">← 返回</a>
-    <span class="header-title">阅读日历</span>
-    <span class="user-badge" id="userEmail"></span>
+    <div class="header-inner">
+      <a href="index.html" class="back-link">← 返回</a>
+      <span class="header-title">阅读日历</span>
+      <span class="user-badge" id="userEmail"></span>
+    </div>
   </header>
 
-  <div class="month-nav">
-    <button class="nav-btn" id="btnPrev">‹</button>
-    <span class="month-label" id="monthLabel"></span>
-    <button class="nav-btn" id="btnNext">›</button>
-    <button class="refresh-btn" id="btnRefresh" title="刷新数据">↻</button>
-    <button class="refresh-btn" id="btnGoWarehouse" title="小说仓库" style="width:auto;padding:0 10px;font-size:12px;gap:4px;display:flex;align-items:center;">🗄 去仓库</button>
-  </div>
-  <div class="data-status" id="dataStatus"></div>
+  <div class="cal-container">
+    <div class="cal-card">
+      <div class="month-nav">
+        <button class="nav-btn" id="btnPrev">‹</button>
+        <span class="month-label" id="monthLabel"></span>
+        <button class="nav-btn" id="btnNext">›</button>
+        <button class="refresh-btn" id="btnRefresh" title="刷新数据">↻</button>
+        <button class="refresh-btn" id="btnGoWarehouse" title="小说仓库" style="width:auto;padding:0 10px;font-size:12px;gap:4px;display:flex;align-items:center;">🗄 去仓库</button>
+      </div>
+      <div class="data-status" id="dataStatus"></div>
 
-  <div id="calendarWrap">
-    <div class="legend">
-      <span class="legend-item" style="color:var(--accent-deep);font-size:12px;">✦ 已读</span>
-      <span class="legend-item" style="color:var(--accent-deep);font-size:12px;">▸ 计划</span>
+      <div id="calendarWrap">
+        <div class="legend">
+          <span class="legend-item" style="color:var(--accent-deep);font-size:12px;">✦ 已读</span>
+          <span class="legend-item" style="color:var(--accent-deep);font-size:12px;">▸ 计划</span>
+        </div>
+        <div class="cal-weekdays" id="calWeekdays"></div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+
+      <div id="warehouseSection" class="hidden">
+        <div class="wh-grid" id="whGrid"></div>
+        <div class="wh-pagination" id="whPagination" style="display:none;">
+          <button id="btnWhPrev">‹</button>
+          <span id="whPageLabel"></span>
+          <button id="btnWhNext">›</button>
+        </div>
+      </div>
     </div>
-
-    <div class="cal-weekdays" id="calWeekdays"></div>
-    <div class="cal-grid" id="calGrid"></div>
-  </div>
-</div>
-
-<!-- 小说仓库 -->
-<div id="warehouseSection" class="hidden">
-  <div class="wh-grid" id="whGrid"></div>
-  <div class="wh-pagination" id="whPagination" style="display:none;">
-    <button id="btnWhPrev">‹</button>
-    <span id="whPageLabel"></span>
-    <button id="btnWhNext">›</button>
   </div>
 </div>
 
