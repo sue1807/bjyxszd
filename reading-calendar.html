@@ -759,9 +759,8 @@
 
     if (currentFilter !== 'plans') {
       allRecords.forEach(r => {
-        const s = r.start_date || r.review_date;
-        const e = r.review_date || r.start_date;
-        addItem(s, e, { kind: 'record', data: r });
+        const d = r.review_date;
+        if (d) addItem(d, d, { kind: 'record', data: r });
       });
     }
 
