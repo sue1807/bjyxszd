@@ -115,7 +115,7 @@
       text-align: center;
       font-size: 15px;
       font-weight: 700;
-      color: var(--text);
+      color: var(--accent-deep);
     }
 
     /* ── Filter tabs ── */
@@ -260,10 +260,14 @@
 
     .book-bar:hover { filter: brightness(0.88); }
 
+    .book-bar.rec-bar {
+      background: var(--accent-light);
+    }
+
     .book-bar.plan-bar {
-      background: transparent !important;
-      border: 1.5px dashed;
-      color: #7a5550;
+      background: transparent;
+      border: 1.5px dashed var(--accent);
+      color: var(--accent-deep);
     }
 
     .more-hint {
@@ -695,11 +699,6 @@
   const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.APP_CONFIG;
 
   // ── Constants ──
-  const CAL_COLORS = [
-    '#f2b3b3','#f2c9a0','#f2e8a0','#c8e0a8',
-    '#a0d4d4','#a8c0e8','#c8b0e0','#e8b0d0'
-  ];
-
   const PLAN_TAGS = ['修真','种田','无限流','重生','ABO','娱乐圈','现代','古风','悬疑','星际'];
 
   const TYPE_ICONS = { 'BL小说':'🌙','文学小说':'📖','非虚构书籍':'📝','广播剧':'🎧' };
@@ -708,10 +707,7 @@
     return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  function colorForId(id) {
-    const sum = String(id).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-    return CAL_COLORS[sum % CAL_COLORS.length];
-  }
+
 
   function getRatingLabel(v) {
     v = Number(v);
@@ -867,14 +863,13 @@
         : `<div class="cell-date">${day}</div>`;
 
       const barsHtml = unique.slice(0, 4).map(item => {
-        const color = colorForId(item.data.id);
         const name = esc(item.data.name);
         if (item.kind === 'plan') {
           const thumb = item.data.cover_url ? `<img class="bar-thumb" src="${esc(item.data.cover_url)}" />` : '';
-          return `<div class="book-bar plan-bar" style="border-color:${color};" data-planid="${item.data.id}" title="${name}">${thumb}<span class="bar-name">▸ ${name}</span></div>`;
+          return `<div class="book-bar plan-bar" data-planid="${item.data.id}" title="${name}">${thumb}<span class="bar-name">▸ ${name}</span></div>`;
         }
         const thumb = item.data.cover_url ? `<img class="bar-thumb" src="${esc(item.data.cover_url)}" />` : '';
-        return `<div class="book-bar" style="background:${color};" data-recid="${item.data.id}" title="${name}">${thumb}<span class="bar-name">${name}</span></div>`;
+        return `<div class="book-bar rec-bar" data-recid="${item.data.id}" title="${name}">${thumb}<span class="bar-name">✦ ${name}</span></div>`;
       }).join('');
 
       const moreHtml = unique.length > 4
