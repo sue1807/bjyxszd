@@ -694,12 +694,8 @@
 
   <div id="calendarWrap">
     <div class="legend">
-      <span class="legend-item">
-        <span class="legend-dot" style="background:#f2b3b3;"></span> 已读
-      </span>
-      <span class="legend-item">
-        <span class="legend-dot plan"></span> 计划
-      </span>
+      <span class="legend-item" style="color:var(--accent-deep);font-size:12px;">✦ 已读</span>
+      <span class="legend-item" style="color:var(--accent-deep);font-size:12px;">▸ 计划</span>
     </div>
 
     <div class="cal-weekdays" id="calWeekdays"></div>
@@ -1451,10 +1447,13 @@
 
   function renderWhTagChips() {
     const wrap = document.getElementById('whTagChips');
-    wrap.innerHTML = PLAN_TAGS.map(t => {
-      const on = selectedWhTags.has(t);
-      return `<span class="tag-chip${on?' active':''}" data-whtag="${t}">${t}</span>`;
-    }).join('');
+    const preset = PLAN_TAGS.map(t =>
+      `<span class="tag-chip${selectedWhTags.has(t)?' active':''}" data-whtag="${esc(t)}">${esc(t)}</span>`
+    );
+    const custom = [...selectedWhTags].filter(t => !PLAN_TAGS.includes(t)).map(t =>
+      `<span class="tag-chip active" data-whtag="${esc(t)}">${esc(t)} ×</span>`
+    );
+    wrap.innerHTML = [...preset, ...custom].join('');
     wrap.querySelectorAll('.tag-chip').forEach(chip => {
       chip.addEventListener('click', () => {
         const t = chip.dataset.whtag;
@@ -1506,20 +1505,17 @@
   document.getElementById('btnWhUpload').addEventListener('click', () => document.getElementById('whCoverFile').click());
   document.getElementById('whCoverFile').addEventListener('change', async (e) => {
     const file = e.target.files[0]; if (!file) return;
-    const compressed = await compressImage(file, 800, 0.82);
-    // upload to Supabase Storage
-    const blob = await (await fetch(compressed)).blob();
-    const ext = file.name.split('.').pop().toLowerCase() === 'png' ? 'png' : 'jpg';
-    const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
-    const path = `warehouse/${currentUser.id}/${Date.now()}.${ext}`;
-    const { data: up } = await supabase.storage.from('covers').upload(path, blob, { contentType: mime, upsert: true });
-    if (up) {
-      const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path);
-      uploadedWhCoverUrl = publicUrl;
-    } else {
-      uploadedWhCoverUrl = compressed; // fallback to base64
-    }
-    document.getElementById('whUploadPreview').innerHTML = `<img src="${uploadedWhCoverUrl}" style="max-width:100%;border-radius:10px;max-height:140px;object-fit:cover;" />`;
+    const preview = document.getElementById('whUploadPreview');
+    preview.textContent = '上传中…';
+    try {
+      const uploadFile = file.size > 500 * 1024 ? await compressImage(file) : file;
+      const path = `warehouse/${currentUser.id}/${Date.now()}.jpg`;
+      const { error } = await supabase.storage.from('covers').upload(path, uploadFile, { contentType: 'image/jpeg', upsert: false });
+      if (error) { preview.textContent = '上传失败'; return; }
+      const { data } = supabase.storage.from('covers').getPublicUrl(path);
+      uploadedWhCoverUrl = data.publicUrl;
+      preview.innerHTML = `<img src="${esc(uploadedWhCoverUrl)}" style="max-width:100%;border-radius:10px;max-height:140px;object-fit:cover;" />`;
+    } catch { preview.textContent = '处理失败'; }
     e.target.value = '';
   });
   document.getElementById('btnSaveWh').addEventListener('click', async () => {
