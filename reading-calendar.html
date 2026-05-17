@@ -145,6 +145,102 @@
       border-bottom-color: var(--accent);
     }
 
+    /* ── 小说仓库 ── */
+    #warehouseSection {
+      padding: 16px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .warehouse-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .warehouse-card {
+      background: var(--card);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .warehouse-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.1); }
+
+    .warehouse-card-thumb {
+      width: 100%;
+      aspect-ratio: 3/4;
+      object-fit: cover;
+      background: var(--soft);
+      display: block;
+    }
+
+    .warehouse-card-no-thumb {
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: linear-gradient(135deg, var(--accent-light), var(--soft));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+
+    .warehouse-card-info {
+      padding: 8px 10px 10px;
+    }
+
+    .warehouse-card-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-bottom: 3px;
+    }
+
+    .warehouse-card-author {
+      font-size: 11px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-bottom: 5px;
+    }
+
+    .warehouse-card-type {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: var(--accent-light);
+      color: var(--accent-deep);
+    }
+
+    /* ── Warehouse detail dialog ── */
+    .warehouse-detail-cover {
+      width: 90px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 10px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+      flex-shrink: 0;
+    }
+
+    .warehouse-detail-cover-placeholder {
+      width: 90px;
+      height: 120px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent-light), var(--soft));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      flex-shrink: 0;
+    }
+
     /* ── Big calendar ── */
     .cal-weekdays {
       display: grid;
@@ -596,6 +692,7 @@
     <button class="filter-tab active" data-filter="all">全部</button>
     <button class="filter-tab" data-filter="records">已读</button>
     <button class="filter-tab" data-filter="plans">计划</button>
+    <button class="filter-tab" data-filter="warehouse">📌 仓库</button>
   </div>
 
   <div class="legend">
@@ -609,6 +706,11 @@
 
   <div class="cal-weekdays" id="calWeekdays"></div>
   <div class="cal-grid" id="calGrid"></div>
+</div>
+
+<!-- 小说仓库 -->
+<div id="warehouseSection" class="hidden">
+  <div class="warehouse-grid" id="warehouseGrid"></div>
 </div>
 
 <!-- FAB -->
@@ -686,6 +788,62 @@
       <button class="btn-ghost" id="btnClosePlanDetail">关闭</button>
     </div>
     <div class="modal-body" id="planDetailBody"></div>
+  </div>
+</dialog>
+
+<!-- 仓库详情 dialog -->
+<dialog id="warehouseDetailDialog">
+  <div class="modal-wrap">
+    <div class="modal-head">
+      <span class="modal-title" id="whDetailTitle">书籍详情</span>
+      <button class="btn-ghost" id="btnCloseWhDetail">关闭</button>
+    </div>
+    <div class="modal-body" id="whDetailBody"></div>
+  </div>
+</dialog>
+
+<!-- 仓库新增/编辑 dialog -->
+<dialog id="warehouseFormDialog">
+  <div class="modal-wrap">
+    <div class="modal-head">
+      <span class="modal-title" id="whFormTitle">加入仓库</span>
+      <button class="btn-ghost" id="btnCloseWhForm">关闭</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>书名</label>
+        <input id="whName" type="text" placeholder="书名" />
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>类型</label>
+          <select id="whType">
+            <option value="">选择类型</option>
+            <option>BL小说</option>
+            <option>文学小说</option>
+            <option>非虚构书籍</option>
+            <option>广播剧</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>作者</label>
+          <input id="whAuthor" type="text" placeholder="作者" />
+        </div>
+      </div>
+      <div class="field">
+        <label>标签</label>
+        <div id="whTagChips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;"></div>
+      </div>
+      <div class="field">
+        <label>封面截图</label>
+        <input id="whCoverFile" type="file" accept="image/*" style="display:none;" />
+        <div id="whUploadPreview" style="margin-bottom:6px;"></div>
+        <button class="btn-secondary btn-sm" id="btnWhUpload" type="button">上传截图</button>
+      </div>
+      <div style="margin-top:16px;">
+        <button class="btn-primary" id="btnSaveWh" style="width:100%;">保存</button>
+      </div>
+    </div>
   </div>
 </dialog>
 
@@ -1120,7 +1278,12 @@
         document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentFilter = btn.dataset.filter;
-        renderCalendar();
+        const isWarehouse = currentFilter === 'warehouse';
+        document.getElementById('calendarWrap').classList.toggle('hidden', isWarehouse);
+        document.querySelector('.legend').classList.toggle('hidden', isWarehouse);
+        document.getElementById('warehouseSection').classList.toggle('hidden', !isWarehouse);
+        document.getElementById('btnAddPlan').title = isWarehouse ? '加入仓库' : '新增阅读计划';
+        if (isWarehouse) renderWarehouse(); else renderCalendar();
       });
     });
 
@@ -1129,7 +1292,9 @@
       const file = e.target.files[0];
       if (file) uploadPlanImage(file);
     });
-    document.getElementById('btnAddPlan').addEventListener('click', () => openPlanForm());
+    document.getElementById('btnAddPlan').addEventListener('click', () => {
+      if (currentFilter === 'warehouse') openWhForm(); else openPlanForm();
+    });
     document.getElementById('btnClosePlan').addEventListener('click', () => document.getElementById('planDialog').close());
     document.getElementById('btnCloseRec').addEventListener('click', () => document.getElementById('recDialog').close());
     document.getElementById('btnClosePlanDetail').addEventListener('click', () => document.getElementById('planDetailDialog').close());
@@ -1166,6 +1331,159 @@
       else if (planEl) openPlanDetail(planEl.dataset.planid);
     });
   }
+
+  // ── 小说仓库 (prototype with mock data) ──
+  const MOCK_WAREHOUSE = [
+    { id: 1, name: '今天也想见到你', author: '木苏里', type: 'BL小说', tags: ['现代','甜文'], cover_url: '' },
+    { id: 2, name: '我在末世有套房', author: '绿野千鹤', type: 'BL小说', tags: ['无限流','种田'], cover_url: '' },
+    { id: 3, name: '长安的荔枝', author: '马伯庸', type: '文学小说', tags: ['古风','历史'], cover_url: '' },
+  ];
+  let warehouseItems = [...MOCK_WAREHOUSE];
+  let selectedWhTags = new Set();
+  let editingWhId = null;
+  let uploadedWhCoverUrl = '';
+
+  function renderWarehouse() {
+    const grid = document.getElementById('warehouseGrid');
+    if (!warehouseItems.length) {
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--muted);font-size:14px;">还没有收藏，点右下角 + 开始添加</div>`;
+      return;
+    }
+    grid.innerHTML = warehouseItems.map(item => {
+      const thumb = item.cover_url
+        ? `<img class="warehouse-card-thumb" src="${esc(item.cover_url)}" />`
+        : `<div class="warehouse-card-no-thumb">📚</div>`;
+      const type = item.type ? `<span class="warehouse-card-type">${esc(item.type)}</span>` : '';
+      return `<div class="warehouse-card" data-whid="${item.id}">
+        ${thumb}
+        <div class="warehouse-card-info">
+          <div class="warehouse-card-name">${esc(item.name)}</div>
+          <div class="warehouse-card-author">${esc(item.author || '')}</div>
+          ${type}
+        </div>
+      </div>`;
+    }).join('');
+    grid.querySelectorAll('.warehouse-card').forEach(card => {
+      card.addEventListener('click', () => openWhDetail(Number(card.dataset.whid)));
+    });
+  }
+
+  function openWhDetail(id) {
+    const item = warehouseItems.find(x => x.id === id);
+    if (!item) return;
+    document.getElementById('whDetailTitle').textContent = item.name;
+    const cover = item.cover_url
+      ? `<img src="${esc(item.cover_url)}" class="warehouse-detail-cover" onclick="openLightbox(this.src)" style="cursor:zoom-in;" />`
+      : `<div class="warehouse-detail-cover-placeholder">📚</div>`;
+    const tags = (item.tags||[]).map(t => `<span style="font-size:11px;padding:3px 9px;border-radius:20px;background:var(--accent-light);color:var(--accent-deep);">${esc(t)}</span>`).join('');
+    document.getElementById('whDetailBody').innerHTML = `
+      <div style="display:flex;gap:14px;margin-bottom:16px;">
+        ${cover}
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:18px;font-weight:700;color:var(--accent-deep);margin-bottom:4px;">${esc(item.name)}</div>
+          ${item.author ? `<div style="font-size:13px;color:var(--muted);margin-bottom:6px;">✍️ ${esc(item.author)}</div>` : ''}
+          ${item.type ? `<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${esc(item.type)}</div>` : ''}
+          ${tags ? `<div style="display:flex;flex-wrap:wrap;gap:5px;">${tags}</div>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:8px;">
+          <button class="btn-secondary" style="flex:1;" id="btnWhToPlan">📅 未读 → 去计划</button>
+          <button class="btn-primary" style="flex:1;" id="btnWhToRecord">✦ 已读 → 去记录</button>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-secondary" style="flex:1;" id="btnWhEdit">编辑</button>
+          <button class="btn-ghost" style="flex:1;color:var(--danger);" id="btnWhDelete">删除</button>
+        </div>
+      </div>`;
+
+    document.getElementById('btnWhToPlan').onclick = () => {
+      document.getElementById('warehouseDetailDialog').close();
+      openPlanForm(null);
+      document.getElementById('planName').value = item.name;
+      document.getElementById('planAuthor').value = item.author || '';
+      document.getElementById('planType').value = item.type || '';
+    };
+    document.getElementById('btnWhToRecord').onclick = () => {
+      const params = new URLSearchParams({ newrec: '1', name: item.name, author: item.author || '' });
+      window.location.href = `index.html?${params}`;
+    };
+    document.getElementById('btnWhEdit').onclick = () => {
+      document.getElementById('warehouseDetailDialog').close();
+      openWhForm(id);
+    };
+    document.getElementById('btnWhDelete').onclick = () => {
+      if (!confirm('确定删除？')) return;
+      warehouseItems = warehouseItems.filter(x => x.id !== id);
+      document.getElementById('warehouseDetailDialog').close();
+      renderWarehouse();
+    };
+    document.getElementById('warehouseDetailDialog').showModal();
+  }
+
+  function renderWhTagChips() {
+    const wrap = document.getElementById('whTagChips');
+    wrap.innerHTML = PLAN_TAGS.map(t => {
+      const on = selectedWhTags.has(t);
+      return `<span class="tag-chip${on?' active':''}" data-whtag="${t}">${t}</span>`;
+    }).join('');
+    wrap.querySelectorAll('.tag-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const t = chip.dataset.whtag;
+        if (selectedWhTags.has(t)) selectedWhTags.delete(t); else selectedWhTags.add(t);
+        renderWhTagChips();
+      });
+    });
+  }
+
+  function openWhForm(id = null) {
+    editingWhId = id;
+    selectedWhTags = new Set();
+    uploadedWhCoverUrl = '';
+    document.getElementById('whFormTitle').textContent = id ? '编辑收藏' : '加入仓库';
+    document.getElementById('whName').value = '';
+    document.getElementById('whAuthor').value = '';
+    document.getElementById('whType').value = '';
+    document.getElementById('whUploadPreview').innerHTML = '';
+    if (id) {
+      const item = warehouseItems.find(x => x.id === id);
+      if (item) {
+        document.getElementById('whName').value = item.name;
+        document.getElementById('whAuthor').value = item.author || '';
+        document.getElementById('whType').value = item.type || '';
+        selectedWhTags = new Set(item.tags || []);
+        uploadedWhCoverUrl = item.cover_url || '';
+        if (uploadedWhCoverUrl) {
+          document.getElementById('whUploadPreview').innerHTML = `<img src="${esc(uploadedWhCoverUrl)}" style="max-width:100%;border-radius:10px;max-height:140px;object-fit:cover;" />`;
+        }
+      }
+    }
+    renderWhTagChips();
+    document.getElementById('warehouseFormDialog').showModal();
+  }
+
+  document.getElementById('btnCloseWhDetail').addEventListener('click', () => document.getElementById('warehouseDetailDialog').close());
+  document.getElementById('btnCloseWhForm').addEventListener('click', () => document.getElementById('warehouseFormDialog').close());
+  document.getElementById('btnWhUpload').addEventListener('click', () => document.getElementById('whCoverFile').click());
+  document.getElementById('whCoverFile').addEventListener('change', async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const compressed = await compressImage(file, 800, 0.82);
+    document.getElementById('whUploadPreview').innerHTML = `<img src="${compressed}" style="max-width:100%;border-radius:10px;max-height:140px;object-fit:cover;" />`;
+    uploadedWhCoverUrl = compressed;
+    e.target.value = '';
+  });
+  document.getElementById('btnSaveWh').addEventListener('click', () => {
+    const name = document.getElementById('whName').value.trim();
+    if (!name) { alert('请填写书名'); return; }
+    if (editingWhId) {
+      const item = warehouseItems.find(x => x.id === editingWhId);
+      if (item) { item.name = name; item.author = document.getElementById('whAuthor').value.trim(); item.type = document.getElementById('whType').value; item.tags = [...selectedWhTags]; item.cover_url = uploadedWhCoverUrl; }
+    } else {
+      warehouseItems.push({ id: Date.now(), name, author: document.getElementById('whAuthor').value.trim(), type: document.getElementById('whType').value, tags: [...selectedWhTags], cover_url: uploadedWhCoverUrl });
+    }
+    document.getElementById('warehouseFormDialog').close();
+    renderWarehouse();
+  });
 
   // ── Lightbox ──
   window.openLightbox = (src) => {
