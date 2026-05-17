@@ -647,19 +647,17 @@
         calMonth = now.getMonth() + 1;
         // 立刻渲染月份标签，不等数据
         document.getElementById('monthLabel').textContent = `${calYear}年${calMonth}月`;
-        document.getElementById('calGrid').innerHTML =
-          '<div style="padding:24px;color:#a08880;font-size:13px;grid-column:1/-1;">数据加载中…</div>';
-        try {
-          await fetchData();
-          renderCalendar();
-          bindEvents();
-        } catch (err) {
-          document.getElementById('calGrid').innerHTML =
-            `<div style="padding:24px;color:#c96060;font-size:13px;grid-column:1/-1;">加载出错：${err.message}</div>`;
-          console.error(err);
-        }
+        // 先渲染空日历，再后台加载数据
+        renderCalendar();
+        bindEvents();
+        loadDataAndRefresh();
       }
     });
+  }
+
+  async function loadDataAndRefresh() {
+    await fetchData();
+    renderCalendar();
   }
 
   function withTimeout(promise, ms) {
