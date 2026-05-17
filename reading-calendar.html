@@ -171,10 +171,11 @@
     .cal-cell {
       border-right: 1px solid var(--line);
       border-bottom: 1px solid var(--line);
-      min-height: 88px;
+      height: 88px;
       padding: 3px 3px 4px;
       background: var(--card);
       position: relative;
+      overflow: hidden;
     }
 
     .cal-cell.empty { background: var(--bg); }
@@ -506,7 +507,7 @@
 
     /* ── Mobile ── */
     @media (max-width: 480px) {
-      .cal-cell { min-height: 68px; }
+      .cal-cell { height: 68px; }
       .book-bar { font-size: 9px; padding: 1px 3px; }
       .cell-date { font-size: 10px; }
       .month-label { font-size: 14px; }
