@@ -1829,10 +1829,14 @@
   }
 
   function onLogin() {
+    // Clear previous account's data immediately before showing app screen
+    allRecords = [];
+    selectedDateFilter = ''; selectedMonthFilter = '';
     loadCustomTags();
     els.userEmail.textContent = currentUser.email;
     if (currentUser.email) localStorage.setItem('remembered_login_email', currentUser.email);
     showScreen('app');
+    renderStats(); renderCalendar(); renderRecords();
     fetchRecords().then(() => {
       const params = new URLSearchParams(location.search);
       if (params.get('newrec') === '1') {
