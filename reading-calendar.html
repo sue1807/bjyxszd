@@ -1317,7 +1317,7 @@
         document.getElementById('calendarWrap').classList.toggle('hidden', isWarehouse);
         document.getElementById('warehouseSection').classList.toggle('hidden', !isWarehouse);
         document.getElementById('btnAddPlan').title = isWarehouse ? '加入仓库' : '新增阅读计划';
-        if (isWarehouse) renderWarehouse(); else renderCalendar();
+        if (isWarehouse) fetchWarehouse(); else renderCalendar();
       });
     });
 
@@ -1366,16 +1366,22 @@
     });
   }
 
-  // ── 小说仓库 (prototype with mock data) ──
-  const MOCK_WAREHOUSE = [
-    { id: 1, name: '今天也想见到你', author: '木苏里', type: 'BL小说', tags: ['现代','甜文'], cover_url: '' },
-    { id: 2, name: '我在末世有套房', author: '绿野千鹤', type: 'BL小说', tags: ['无限流','种田'], cover_url: '' },
-    { id: 3, name: '长安的荔枝', author: '马伯庸', type: '文学小说', tags: ['古风','历史'], cover_url: '' },
-  ];
-  let warehouseItems = [...MOCK_WAREHOUSE];
+  // ── 小说仓库 ──
+  let warehouseItems = [];
   let selectedWhTags = new Set();
   let editingWhId = null;
   let uploadedWhCoverUrl = '';
+
+  async function fetchWarehouse() {
+    if (!currentUser) return;
+    const { data } = await supabase
+      .from('novel_warehouse')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+    warehouseItems = data || [];
+    renderWarehouse();
+  }
 
   const WH_COLS = 7;
   const WH_PAGE_SIZE = 35; // 7×5 rows
@@ -1406,7 +1412,7 @@
     }).join('');
 
     grid.querySelectorAll('.wh-cell:not(.wh-empty)').forEach(cell => {
-      cell.addEventListener('click', () => openWhDetail(Number(cell.dataset.whid)));
+      cell.addEventListener('click', () => openWhDetail(cell.dataset.whid));
     });
 
     if (totalPages > 1) {
@@ -1423,7 +1429,7 @@
   document.getElementById('btnWhNext').addEventListener('click', () => { whPage++; renderWarehouse(); });
 
   function openWhDetail(id) {
-    const item = warehouseItems.find(x => x.id === id);
+    const item = warehouseItems.find(x => String(x.id) === String(id));
     if (!item) return;
     document.getElementById('whDetailTitle').textContent = item.name;
     const cover = item.cover_url
@@ -1466,11 +1472,11 @@
       document.getElementById('warehouseDetailDialog').close();
       openWhForm(id);
     };
-    document.getElementById('btnWhDelete').onclick = () => {
+    document.getElementById('btnWhDelete').onclick = async () => {
       if (!confirm('确定删除？')) return;
-      warehouseItems = warehouseItems.filter(x => x.id !== id);
+      await supabase.from('novel_warehouse').delete().eq('id', id).eq('user_id', currentUser.id);
       document.getElementById('warehouseDetailDialog').close();
-      renderWarehouse();
+      await fetchWarehouse();
     };
     document.getElementById('warehouseDetailDialog').showModal();
   }
@@ -1500,7 +1506,7 @@
     document.getElementById('whType').value = '';
     document.getElementById('whUploadPreview').innerHTML = '';
     if (id) {
-      const item = warehouseItems.find(x => x.id === id);
+      const item = warehouseItems.find(x => String(x.id) === String(id));
       if (item) {
         document.getElementById('whName').value = item.name;
         document.getElementById('whAuthor').value = item.author || '';
@@ -1522,21 +1528,39 @@
   document.getElementById('whCoverFile').addEventListener('change', async (e) => {
     const file = e.target.files[0]; if (!file) return;
     const compressed = await compressImage(file, 800, 0.82);
-    document.getElementById('whUploadPreview').innerHTML = `<img src="${compressed}" style="max-width:100%;border-radius:10px;max-height:140px;object-fit:cover;" />`;
-    uploadedWhCoverUrl = compressed;
+    // upload to Supabase Storage
+    const blob = await (await fetch(compressed)).blob();
+    const path = `warehouse/${currentUser.id}/${Date.now()}.jpg`;
+    const { data: up } = await supabase.storage.from('covers').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+    if (up) {
+      const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path);
+      uploadedWhCoverUrl = publicUrl;
+    } else {
+      uploadedWhCoverUrl = compressed; // fallback to base64
+    }
+    document.getElementById('whUploadPreview').innerHTML = `<img src="${uploadedWhCoverUrl}" style="max-width:100%;border-radius:10px;max-height:140px;object-fit:cover;" />`;
     e.target.value = '';
   });
-  document.getElementById('btnSaveWh').addEventListener('click', () => {
+  document.getElementById('btnSaveWh').addEventListener('click', async () => {
     const name = document.getElementById('whName').value.trim();
     if (!name) { alert('请填写书名'); return; }
+    const payload = {
+      name,
+      author: document.getElementById('whAuthor').value.trim() || null,
+      type: document.getElementById('whType').value || null,
+      tags: [...selectedWhTags],
+      cover_url: uploadedWhCoverUrl || null,
+      user_id: currentUser.id,
+    };
+    let error;
     if (editingWhId) {
-      const item = warehouseItems.find(x => x.id === editingWhId);
-      if (item) { item.name = name; item.author = document.getElementById('whAuthor').value.trim(); item.type = document.getElementById('whType').value; item.tags = [...selectedWhTags]; item.cover_url = uploadedWhCoverUrl; }
+      ({ error } = await supabase.from('novel_warehouse').update(payload).eq('id', editingWhId).eq('user_id', currentUser.id));
     } else {
-      warehouseItems.push({ id: Date.now(), name, author: document.getElementById('whAuthor').value.trim(), type: document.getElementById('whType').value, tags: [...selectedWhTags], cover_url: uploadedWhCoverUrl });
+      ({ error } = await supabase.from('novel_warehouse').insert(payload));
     }
+    if (error) { alert('保存失败：' + error.message); return; }
     document.getElementById('warehouseFormDialog').close();
-    renderWarehouse();
+    await fetchWarehouse();
   });
 
   // ── Lightbox ──
