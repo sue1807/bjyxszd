@@ -1284,6 +1284,7 @@
       document.getElementById('btnAddPlan').title = inWarehouse ? '加入仓库' : '新增阅读计划';
       document.getElementById('btnGoWarehouse').style.color = inWarehouse ? 'var(--accent-deep)' : '';
       if (inWarehouse) fetchWarehouse();
+      else setStatus(`已加载 ${allRecords.length} 条记录、${allPlans.length} 个计划`);
     });
 
     document.getElementById('btnRefresh').addEventListener('click', () => loadDataAndRefresh());
@@ -1339,12 +1340,14 @@
 
   async function fetchWarehouse() {
     if (!currentUser) return;
+    setStatus('加载仓库中…');
     const { data } = await supabase
       .from('novel_warehouse')
       .select('*')
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: false });
     warehouseItems = data || [];
+    setStatus(`仓库共 ${warehouseItems.length} 本`);
     renderWarehouse();
   }
 
@@ -1506,8 +1509,10 @@
     const compressed = await compressImage(file, 800, 0.82);
     // upload to Supabase Storage
     const blob = await (await fetch(compressed)).blob();
-    const path = `warehouse/${currentUser.id}/${Date.now()}.jpg`;
-    const { data: up } = await supabase.storage.from('covers').upload(path, blob, { contentType: 'image/jpeg', upsert: true });
+    const ext = file.name.split('.').pop().toLowerCase() === 'png' ? 'png' : 'jpg';
+    const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+    const path = `warehouse/${currentUser.id}/${Date.now()}.${ext}`;
+    const { data: up } = await supabase.storage.from('covers').upload(path, blob, { contentType: mime, upsert: true });
     if (up) {
       const { data: { publicUrl } } = supabase.storage.from('covers').getPublicUrl(path);
       uploadedWhCoverUrl = publicUrl;
