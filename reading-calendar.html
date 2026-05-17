@@ -767,9 +767,8 @@
 
     if (currentFilter !== 'records') {
       allPlans.forEach(p => {
-        const s = p.planned_start;
-        const e = p.planned_end || p.planned_start;
-        addItem(s, e, { kind: 'plan', data: p });
+        const d = p.planned_start;
+        if (d) addItem(d, d, { kind: 'plan', data: p });
       });
     }
 
