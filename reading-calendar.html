@@ -929,7 +929,17 @@
     const start = document.getElementById('planStart').value;
     if (!name) { alert('请填写书名'); return; }
 
-    const payload = {
+    const doSave = async (payload) => {
+      if (editingPlanId) {
+        const { error } = await supabase.from('reading_plans').update(payload).eq('id', editingPlanId).eq('user_id', currentUser.id);
+        return error;
+      } else {
+        const { error } = await supabase.from('reading_plans').insert(payload);
+        return error;
+      }
+    };
+
+    let payload = {
       name,
       author: author || null,
       planned_start: start || null,
@@ -937,11 +947,15 @@
       user_id: currentUser.id
     };
 
-    if (editingPlanId) {
-      await supabase.from('reading_plans').update(payload).eq('id', editingPlanId).eq('user_id', currentUser.id);
-    } else {
-      await supabase.from('reading_plans').insert(payload);
+    let err = await doSave(payload);
+
+    // 若 author 列不存在则回退不带 author 重试
+    if (err) {
+      const { author: _a, ...fallback } = payload;
+      err = await doSave(fallback);
     }
+
+    if (err) { alert('保存失败：' + err.message); return; }
 
     document.getElementById('planDialog').close();
     await fetchData(); renderCalendar();
