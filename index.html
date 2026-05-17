@@ -1160,6 +1160,7 @@
         <span class="user-badge" id="userEmail">-</span>
         <a href="reading-calendar.html" style="text-decoration:none;"><button class="btn-ghost btn-sm">阅读日历</button></a>
         <a href="public.html" style="text-decoration:none;"><button class="btn-ghost btn-sm">公共书架</button></a>
+        <button class="btn-ghost btn-sm" id="btnChangePwd">改密码</button>
         <button class="btn-ghost btn-sm" id="btnSignOut">退出</button>
       </div>
     </div>
@@ -1342,6 +1343,28 @@
       </div>
       <div class="status" id="saveState"></div>
       <div class="draft-note" id="draftState">草稿未保存</div>
+    </div>
+  </div>
+</dialog>
+
+<!-- Change Password Dialog -->
+<dialog id="changePwdDialog">
+  <div class="modal-wrap">
+    <div class="modal-head">
+      <span class="modal-title">修改密码</span>
+      <button class="btn-ghost" id="btnClosePwd">关闭</button>
+    </div>
+    <div class="modal-body" style="padding:16px 20px 24px;">
+      <div class="field" style="margin-bottom:12px;">
+        <label for="newPwd">新密码</label>
+        <input id="newPwd" type="password" placeholder="至少 6 位" autocomplete="new-password" />
+      </div>
+      <div class="field" style="margin-bottom:16px;">
+        <label for="confirmPwd">确认新密码</label>
+        <input id="confirmPwd" type="password" placeholder="再输入一次" autocomplete="new-password" />
+      </div>
+      <div id="pwdStatus" style="font-size:13px;color:var(--accent);margin-bottom:12px;min-height:18px;"></div>
+      <button class="btn-primary" id="btnSavePwd" style="width:100%;">保存</button>
     </div>
   </div>
 </dialog>
@@ -2277,6 +2300,30 @@
   });
 
   bootstrap();
+
+  // ── Change Password ──
+  document.getElementById('btnChangePwd').addEventListener('click', () => {
+    document.getElementById('newPwd').value = '';
+    document.getElementById('confirmPwd').value = '';
+    document.getElementById('pwdStatus').textContent = '';
+    document.getElementById('changePwdDialog').showModal();
+  });
+  document.getElementById('btnClosePwd').addEventListener('click', () => {
+    document.getElementById('changePwdDialog').close();
+  });
+  document.getElementById('btnSavePwd').addEventListener('click', async () => {
+    const newPwd = document.getElementById('newPwd').value;
+    const confirmPwd = document.getElementById('confirmPwd').value;
+    const status = document.getElementById('pwdStatus');
+    if (!newPwd || newPwd.length < 6) { status.textContent = '密码至少 6 位'; return; }
+    if (newPwd !== confirmPwd) { status.textContent = '两次输入不一致'; return; }
+    status.textContent = '保存中…';
+    const { error } = await supabase.auth.updateUser({ password: newPwd });
+    if (error) { status.textContent = '失败：' + error.message; return; }
+    status.style.color = 'green';
+    status.textContent = '密码已更新 ✓';
+    setTimeout(() => document.getElementById('changePwdDialog').close(), 1200);
+  });
 
   // ── Lightbox ──
   window.openLightbox = (src) => {
