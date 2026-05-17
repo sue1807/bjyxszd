@@ -719,17 +719,19 @@
     <button class="filter-tab" data-filter="warehouse">📌 仓库</button>
   </div>
 
-  <div class="legend">
-    <span class="legend-item">
-      <span class="legend-dot" style="background:#f2b3b3;"></span> 已读
-    </span>
-    <span class="legend-item">
-      <span class="legend-dot plan"></span> 计划
-    </span>
-  </div>
+  <div id="calendarWrap">
+    <div class="legend">
+      <span class="legend-item">
+        <span class="legend-dot" style="background:#f2b3b3;"></span> 已读
+      </span>
+      <span class="legend-item">
+        <span class="legend-dot plan"></span> 计划
+      </span>
+    </div>
 
-  <div class="cal-weekdays" id="calWeekdays"></div>
-  <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-weekdays" id="calWeekdays"></div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
 </div>
 
 <!-- 小说仓库 -->
@@ -1309,7 +1311,6 @@
         currentFilter = btn.dataset.filter;
         const isWarehouse = currentFilter === 'warehouse';
         document.getElementById('calendarWrap').classList.toggle('hidden', isWarehouse);
-        document.querySelector('.legend').classList.toggle('hidden', isWarehouse);
         document.getElementById('warehouseSection').classList.toggle('hidden', !isWarehouse);
         document.getElementById('btnAddPlan').title = isWarehouse ? '加入仓库' : '新增阅读计划';
         if (isWarehouse) renderWarehouse(); else renderCalendar();
