@@ -570,6 +570,15 @@
         <input id="planName" type="text" placeholder="作品名称" />
       </div>
       <div class="field">
+        <label>类型</label>
+        <select id="planType">
+          <option value="BL小说">BL小说</option>
+          <option value="文学小说">文学小说</option>
+          <option value="非虚构书籍">非虚构书籍</option>
+          <option value="广播剧">广播剧</option>
+        </select>
+      </div>
+      <div class="field">
         <label>作者</label>
         <input id="planAuthor" type="text" placeholder="作者名" />
       </div>
@@ -859,8 +868,11 @@
     document.getElementById('planDetailTitle').textContent = p.name;
     document.getElementById('planDetailBody').innerHTML = `
       <div style="font-size:18px;font-weight:700;color:var(--accent-deep);margin-bottom:4px;">${esc(p.name)}</div>
-      ${p.author ? `<div style="color:var(--muted);font-size:13px;margin-bottom:6px;">✍️ ${esc(p.author)}</div>` : ''}
-      ${p.planned_start ? `<div style="color:var(--muted);font-size:13px;margin-bottom:10px;">📅 计划 ${p.planned_start}</div>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+        ${p.type ? `<span class="meta-tag">${esc(p.type)}</span>` : ''}
+        ${p.author ? `<span style="color:var(--muted);font-size:13px;">✍️ ${esc(p.author)}</span>` : ''}
+        ${p.planned_start ? `<span style="color:var(--muted);font-size:13px;">📅 ${p.planned_start}</span>` : ''}
+      </div>
       ${tagsHtml ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">${tagsHtml}</div>` : ''}
       <div class="btn-row" style="flex-wrap:wrap;">
         <button class="btn-secondary" style="flex:1;" id="btnEditPlanDetail">编辑计划</button>
@@ -903,12 +915,14 @@
       const p = allPlans.find(x => String(x.id) === String(id));
       if (p) {
         document.getElementById('planName').value = p.name || '';
+        document.getElementById('planType').value = p.type || 'BL小说';
         document.getElementById('planAuthor').value = p.author || '';
         document.getElementById('planStart').value = p.planned_start || '';
         selectedPlanTags = new Set(p.tags || []);
       }
     } else {
       document.getElementById('planName').value = '';
+      document.getElementById('planType').value = 'BL小说';
       document.getElementById('planAuthor').value = '';
       document.getElementById('planStart').value = todayStr();
     }
@@ -939,8 +953,11 @@
       }
     };
 
+    const type = document.getElementById('planType').value;
+
     let payload = {
       name,
+      type: type || null,
       author: author || null,
       planned_start: start || null,
       tags: [...selectedPlanTags],
@@ -949,9 +966,9 @@
 
     let err = await doSave(payload);
 
-    // 若 author 列不存在则回退不带 author 重试
+    // 若扩展列不存在则回退只保存核心字段
     if (err) {
-      const { author: _a, ...fallback } = payload;
+      const { type: _t, author: _a, ...fallback } = payload;
       err = await doSave(fallback);
     }
 
