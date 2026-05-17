@@ -589,6 +589,10 @@
       <div class="field">
         <label>标签</label>
         <div id="planTagChips" style="margin-top:4px;"></div>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <input id="planCustomTag" type="text" placeholder="自定义标签" style="flex:1;" />
+          <button type="button" id="btnAddPlanTag" class="btn-secondary" style="white-space:nowrap;padding:6px 12px;font-size:13px;">添加</button>
+        </div>
       </div>
       <div class="btn-row">
         <button class="btn-primary" id="btnSavePlan" style="flex:1;">保存</button>
@@ -632,13 +636,7 @@
     '#a0d4d4','#a8c0e8','#c8b0e0','#e8b0d0'
   ];
 
-  const ALL_TAGS = [...new Set([
-    '修真','种田','无限流','校园','重生','穿书','快穿','星际','ABO','哨向','娱乐圈',
-    '破镜重圆','玄幻','灵异','年下','双强','年上','末世',
-    '悬疑','推理','严肃文学','女性文学','成长','家庭','历史','社会派',
-    '投资','传记','社会学','心理学','商业','纪实','访谈',
-    '猫耳','漫播','现代','古风','刑侦'
-  ])];
+  const PLAN_TAGS = ['修真','种田','无限流','重生','ABO','娱乐圈','现代','古风','悬疑','星际'];
 
   const TYPE_ICONS = { 'BL小说':'🌙','文学小说':'📖','非虚构书籍':'📝','广播剧':'🎧' };
 
@@ -932,9 +930,13 @@
   }
 
   function renderPlanTags() {
-    document.getElementById('planTagChips').innerHTML = ALL_TAGS.map(t =>
+    const preset = PLAN_TAGS.map(t =>
       `<span class="tag-chip ${selectedPlanTags.has(t) ? 'active' : ''}" data-tag="${esc(t)}">${esc(t)}</span>`
-    ).join('');
+    );
+    const custom = [...selectedPlanTags].filter(t => !PLAN_TAGS.includes(t)).map(t =>
+      `<span class="tag-chip active" data-tag="${esc(t)}">${esc(t)} ×</span>`
+    );
+    document.getElementById('planTagChips').innerHTML = [...preset, ...custom].join('');
   }
 
   async function savePlan() {
@@ -1017,6 +1019,16 @@
       const tag = chip.dataset.tag;
       selectedPlanTags.has(tag) ? selectedPlanTags.delete(tag) : selectedPlanTags.add(tag);
       renderPlanTags();
+    });
+
+    const addPlanTag = () => {
+      const input = document.getElementById('planCustomTag');
+      const val = input.value.trim();
+      if (val) { selectedPlanTags.add(val); input.value = ''; renderPlanTags(); }
+    };
+    document.getElementById('btnAddPlanTag').addEventListener('click', addPlanTag);
+    document.getElementById('planCustomTag').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addPlanTag(); }
     });
 
     document.getElementById('calGrid').addEventListener('click', e => {
