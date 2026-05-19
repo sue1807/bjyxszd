@@ -139,6 +139,16 @@
     .dup-link { display: flex; align-items: center; gap: 5px; text-decoration: none; color: inherit; border-radius: 5px; padding: 1px 3px; margin: 1px 0; cursor: pointer; }
     .dup-link:hover { background: #fce8e4; }
 
+    .wh-detail-cover {
+      width: 80px; height: 110px; object-fit: cover;
+      border-radius: 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.15); flex-shrink: 0; cursor: zoom-in;
+    }
+    .wh-detail-cover-ph {
+      width: 80px; height: 110px; border-radius: 10px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent-light), #fdf7f5);
+      display: flex; align-items: center; justify-content: center; font-size: 32px;
+    }
+
     label {
       display: block;
       margin-bottom: 6px;
@@ -1500,6 +1510,17 @@
   <img id="imgLightboxImg" src="" alt="" />
 </dialog>
 
+<!-- ── Warehouse quick detail ── -->
+<dialog id="whQuickDialog">
+  <div class="modal-wrap">
+    <div class="modal-head">
+      <span class="modal-title" id="whQuickTitle">书籍详情</span>
+      <button class="btn-ghost" id="btnCloseWhQuick">关闭</button>
+    </div>
+    <div class="modal-body" id="whQuickBody"></div>
+  </div>
+</dialog>
+
 <script src="config.js"></script>
 <script type="module">
   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -1869,6 +1890,48 @@
     </div>` : ''}`;
   }
 
+  // ── Warehouse quick detail (shown in-page) ──
+  async function openWhQuickDetail(id) {
+    document.getElementById('whQuickTitle').textContent = '加载中…';
+    document.getElementById('whQuickBody').innerHTML = '';
+    document.getElementById('whQuickDialog').showModal();
+    const { data: item } = await supabase.from('novel_warehouse').select('*').eq('id', id).single();
+    if (!item) { document.getElementById('whQuickBody').innerHTML = '<p style="padding:20px;color:var(--muted);">加载失败</p>'; return; }
+    document.getElementById('whQuickTitle').textContent = item.name;
+    const cover = item.cover_url
+      ? `<img src="${esc(item.cover_url)}" class="wh-detail-cover" onclick="openLightbox(this.src)" />`
+      : `<div class="wh-detail-cover-ph">📚</div>`;
+    const tags = (item.tags||[]).map(t =>
+      `<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:var(--accent-light);color:var(--accent-deep);">${esc(t)}</span>`
+    ).join('');
+    document.getElementById('whQuickBody').innerHTML = `
+      <div style="display:flex;gap:14px;margin-bottom:16px;">
+        ${cover}
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:18px;font-weight:700;color:var(--accent-deep);margin-bottom:4px;">${esc(item.name)}</div>
+          ${item.author ? `<div style="font-size:13px;color:var(--muted);margin-bottom:6px;">✍️ ${esc(item.author)}</div>` : ''}
+          ${item.type  ? `<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">${esc(item.type)}</div>` : ''}
+          ${tags ? `<div style="display:flex;flex-wrap:wrap;gap:5px;">${tags}</div>` : ''}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-secondary" style="flex:1;" id="whQuickToPlan">📅 未读 → 去计划</button>
+        <button class="btn-primary"   style="flex:1;" id="whQuickToRec">✦ 已读 → 去记录</button>
+      </div>`;
+    document.getElementById('whQuickToPlan').onclick = () => {
+      const p = new URLSearchParams({ newplan: '1', name: item.name, author: item.author||'', type: item.type||'' });
+      window.location.href = `reading-calendar.html?${p}`;
+    };
+    document.getElementById('whQuickToRec').onclick = () => {
+      document.getElementById('whQuickDialog').close();
+      resetForm(); loadDraft(); initAllStars(); updateRatingUI();
+      els.name.value = item.name;
+      if (item.author) els.author.value = item.author;
+      els.recordDialog.showModal();
+    };
+  }
+  document.getElementById('btnCloseWhQuick').addEventListener('click', () => document.getElementById('whQuickDialog').close());
+
   function renderCrossSearch(keyword) {
     const el = document.getElementById('crossSearchResults');
     if (!keyword) { el.innerHTML = ''; return; }
@@ -1882,17 +1945,18 @@
     if (!planHits.length && !whHits.length) { el.innerHTML = ''; return; }
     const rows = [...planHits.map(p => ({ source: 'plan', label: '阅读计划', ...p })),
                   ...whHits.map(w => ({ source: 'wh',   label: '小说仓库', ...w }))];
-    el.innerHTML = `<div class="cross-head">日历相关结果（点击跳转）</div>` +
+    el.innerHTML = `<div class="cross-head">日历相关结果（点击查看）</div>` +
       rows.slice(0, 20).map(item => {
-        const href = item.source === 'plan'
-          ? `reading-calendar.html?openplan=${item.id}`
-          : `reading-calendar.html?warehouse=${item.id}`;
-        return `<a class="cross-row" href="${href}">
+        const href = item.source === 'plan' ? `reading-calendar.html?openplan=${item.id}` : '#';
+        return `<a class="cross-row" href="${href}" data-source="${item.source}" data-id="${item.id}">
           <span class="cross-source-badge ${item.source}">${item.label}</span>
           <span class="cross-row-name">${esc(item.name)}</span>
           ${item.author ? `<span class="cross-row-author">${esc(item.author)}</span>` : ''}
         </a>`;
       }).join('');
+    el.querySelectorAll('.cross-row[data-source="wh"]').forEach(a => {
+      a.addEventListener('click', e => { e.preventDefault(); openWhQuickDetail(a.dataset.id); });
+    });
   }
 
   // ── Auth ──
@@ -2320,15 +2384,16 @@
     const labels = { rec: '已读记录', plan: '阅读计划', wh: '小说仓库' };
     const esc2 = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     el.innerHTML = '⚠️ 已找到相关记录，点击查看：<br>' + hits.slice(0, 5).map(h => {
-      const href = h.source === 'rec' ? '#'
-        : h.source === 'plan' ? `reading-calendar.html?openplan=${h.id}`
-        : `reading-calendar.html?warehouse=${h.id}`;
+      const href = h.source === 'plan' ? `reading-calendar.html?openplan=${h.id}` : '#';
       return `<a class="dup-hint-row dup-link" href="${href}" data-source="${h.source}" data-id="${h.id}">` +
         `<span class="dup-badge ${h.source}">${labels[h.source]}</span>${esc2(h.name)}</a>`;
     }).join('');
     el.className = 'dup-hint show';
     el.querySelectorAll('.dup-link[data-source="rec"]').forEach(a => {
       a.addEventListener('click', e => { e.preventDefault(); openView(a.dataset.id); });
+    });
+    el.querySelectorAll('.dup-link[data-source="wh"]').forEach(a => {
+      a.addEventListener('click', e => { e.preventDefault(); openWhQuickDetail(a.dataset.id); });
     });
   }
 

@@ -979,17 +979,23 @@
     setStatus(total > 0 ? `已加载 ${allRecords.length} 条记录、${allPlans.length} 个计划` : '暂无数据');
     if (btn) btn.classList.remove('spinning');
 
-    // 处理从 index.html 跳转过来的查重/搜索链接
+    // 处理从 index.html 跳转过来的链接
     const params = new URLSearchParams(location.search);
     const openPlanId = params.get('openplan');
-    const openWhId = params.get('warehouse');
+    const openWhId   = params.get('warehouse');
+    const newPlan    = params.get('newplan');
     if (openPlanId) {
       openPlanDetail(openPlanId);
     } else if (openWhId) {
-      await fetchWarehouse();   // 拉取完整仓库数据
-      openWhDetail(openWhId);  // 直接打开详情弹窗
+      await fetchWarehouse();
+      openWhDetail(openWhId);
+    } else if (newPlan) {
+      openPlanForm(null);
+      if (params.get('name'))   document.getElementById('planName').value   = params.get('name');
+      if (params.get('author')) document.getElementById('planAuthor').value = params.get('author');
+      if (params.get('type'))   document.getElementById('planType').value   = params.get('type');
     }
-    if (openPlanId || openWhId) history.replaceState(null, '', location.pathname);
+    if (openPlanId || openWhId || newPlan) history.replaceState(null, '', location.pathname);
   }
 
   function withTimeout(promise, ms) {
