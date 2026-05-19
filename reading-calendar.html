@@ -141,77 +141,78 @@
     }
 
 
-    /* ── 小说仓库 ── */
-    #warehouseSection { background: var(--bg); }
+    /* ── 小说仓库（列表）── */
+    .wh-list { display: flex; flex-direction: column; }
 
-    .wh-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      border-left: 1px solid var(--line);
-      border-top: 1px solid var(--line);
-    }
-
-    .wh-cell {
-      border-right: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-      padding: 6px;
-      min-height: 100px;
-      cursor: pointer;
-      background: var(--card);
+    .wh-row {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--line);
+      cursor: pointer;
       transition: background .1s;
-      overflow: hidden;
     }
-    .wh-cell:hover { background: var(--soft); }
-    .wh-cell.wh-empty {
-      cursor: default;
-      background: var(--bg);
-    }
-    .wh-cell.wh-empty:hover { background: var(--bg); }
+    .wh-row:hover { background: var(--soft); }
 
-    .wh-thumb {
-      width: 100%;
-      height: 70px;
+    .wh-row-thumb {
+      width: 36px;
+      height: 50px;
       object-fit: cover;
-      border-radius: 4px;
+      border-radius: 5px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .wh-row-thumb-ph {
+      width: 36px;
+      height: 50px;
+      border-radius: 5px;
+      background: linear-gradient(135deg, var(--accent-light), var(--soft));
       flex-shrink: 0;
     }
 
-    .wh-name {
-      font-size: 10px;
+    .wh-row-info { flex: 1; min-width: 0; }
+
+    .wh-row-name {
+      font-size: 13px;
       font-weight: 500;
-      color: var(--accent-deep);
+      color: var(--text);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      line-height: 1.3;
     }
 
-    .wh-author {
-      font-size: 10px;
-      font-weight: 300;
+    .wh-row-author {
+      font-size: 12px;
       color: var(--muted);
+      margin-top: 2px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      line-height: 1.3;
     }
 
-    .wh-tags {
+    .wh-row-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 3px;
+      gap: 4px;
+      margin-top: 5px;
     }
 
     .wh-tag {
-      font-size: 9px;
+      font-size: 11px;
       font-weight: 300;
-      padding: 1px 5px;
+      padding: 1px 7px;
       border-radius: 10px;
       background: var(--accent-light);
       color: var(--accent-deep);
+    }
+
+    .wh-empty-tip {
+      padding: 40px 16px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
     }
 
     .wh-pagination {
@@ -727,7 +728,7 @@
       </div>
 
       <div id="warehouseSection" class="hidden">
-        <div class="wh-grid" id="whGrid"></div>
+        <div class="wh-list" id="whGrid"></div>
         <div class="wh-pagination" id="whPagination" style="display:none;">
           <button id="btnWhPrev">‹</button>
           <span id="whPageLabel"></span>
@@ -1303,7 +1304,9 @@
       document.getElementById('calendarWrap').classList.toggle('hidden', inWarehouse);
       document.getElementById('warehouseSection').classList.toggle('hidden', !inWarehouse);
       document.getElementById('btnAddPlan').title = inWarehouse ? '加入仓库' : '新增阅读计划';
-      document.getElementById('btnGoWarehouse').style.color = inWarehouse ? 'var(--accent-deep)' : '';
+      const whBtn = document.getElementById('btnGoWarehouse');
+      whBtn.innerHTML = inWarehouse ? '← 返回' : '🗄 去仓库';
+      whBtn.style.color = inWarehouse ? 'var(--accent-deep)' : '';
       if (inWarehouse) fetchWarehouse();
       else setStatus(`已加载 ${allRecords.length} 条记录、${allPlans.length} 个计划`);
     });
@@ -1367,41 +1370,48 @@
       .select('*')
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: false });
-    warehouseItems = data || [];
+    warehouseItems = (data || []).sort((a, b) =>
+      a.name.localeCompare(b.name, 'zh-CN', { sensitivity: 'base' })
+    );
     setStatus(`仓库共 ${warehouseItems.length} 本`);
     renderWarehouse();
   }
 
-  const WH_COLS = 7;
-  const WH_PAGE_SIZE = 35; // 7×5 rows
+  const WH_PAGE_SIZE = 30;
   let whPage = 0;
 
   function renderWarehouse() {
-    const grid = document.getElementById('whGrid');
+    const list = document.getElementById('whGrid');
     const pagination = document.getElementById('whPagination');
+
+    if (!warehouseItems.length) {
+      list.innerHTML = `<div class="wh-empty-tip">仓库还没有书，点 + 加入第一本吧</div>`;
+      pagination.style.display = 'none';
+      return;
+    }
+
     const totalPages = Math.max(1, Math.ceil(warehouseItems.length / WH_PAGE_SIZE));
     if (whPage >= totalPages) whPage = totalPages - 1;
-
     const pageItems = warehouseItems.slice(whPage * WH_PAGE_SIZE, (whPage + 1) * WH_PAGE_SIZE);
-    // pad to fill grid rows (multiples of 7)
-    const padded = [...pageItems];
-    while (padded.length % WH_COLS !== 0) padded.push(null);
-    if (!padded.length) for (let i = 0; i < WH_COLS; i++) padded.push(null);
 
-    grid.innerHTML = padded.map(item => {
-      if (!item) return `<div class="wh-cell wh-empty"></div>`;
-      const thumb = item.cover_url ? `<img class="wh-thumb" src="${esc(item.cover_url)}" />` : '';
-      const tags = (item.tags || []).slice(0, 3).map(t => `<span class="wh-tag">${esc(t)}</span>`).join('');
-      return `<div class="wh-cell" data-whid="${item.id}">
+    list.innerHTML = pageItems.map(item => {
+      const thumb = item.cover_url
+        ? `<img class="wh-row-thumb" src="${esc(item.cover_url)}" />`
+        : `<div class="wh-row-thumb-ph"></div>`;
+      const tags = (item.tags || []).slice(0, 4)
+        .map(t => `<span class="wh-tag">${esc(t)}</span>`).join('');
+      return `<div class="wh-row" data-whid="${item.id}">
         ${thumb}
-        <div class="wh-name">${esc(item.name)}</div>
-        ${item.author ? `<div class="wh-author">${esc(item.author)}</div>` : ''}
-        ${tags ? `<div class="wh-tags">${tags}</div>` : ''}
+        <div class="wh-row-info">
+          <div class="wh-row-name">${esc(item.name)}</div>
+          ${item.author ? `<div class="wh-row-author">${esc(item.author)}</div>` : ''}
+          ${tags ? `<div class="wh-row-tags">${tags}</div>` : ''}
+        </div>
       </div>`;
     }).join('');
 
-    grid.querySelectorAll('.wh-cell:not(.wh-empty)').forEach(cell => {
-      cell.addEventListener('click', () => openWhDetail(cell.dataset.whid));
+    list.querySelectorAll('.wh-row').forEach(row => {
+      row.addEventListener('click', () => openWhDetail(row.dataset.whid));
     });
 
     if (totalPages > 1) {
