@@ -113,6 +113,30 @@
 
     .field { margin-bottom: 10px; }
 
+    .dup-hint {
+      font-size: 11px;
+      color: #b06b62;
+      background: #fff5f3;
+      border: 1px solid #f2d0cc;
+      border-radius: 8px;
+      padding: 5px 10px;
+      margin-top: 5px;
+      line-height: 1.6;
+      display: none;
+    }
+    .dup-hint.show { display: block; }
+    .dup-hint-row { display: flex; align-items: center; gap: 5px; }
+    .dup-badge {
+      font-size: 10px;
+      padding: 0 5px;
+      border-radius: 4px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .dup-badge.rec  { background: #fde8d8; color: #b06020; }
+    .dup-badge.plan { background: #fde8f0; color: #b0306a; }
+    .dup-badge.wh   { background: #e8eef8; color: #3060b0; }
+
     label {
       display: block;
       margin-bottom: 6px;
@@ -1288,6 +1312,7 @@
       <div class="field">
         <label for="name">名称</label>
         <input id="name" type="text" placeholder="作品名称" />
+        <div class="dup-hint" id="recDupHint"></div>
       </div>
 
       <div class="field">
@@ -1474,6 +1499,7 @@
   };
 
   let supabase = null, currentUser = null, allRecords = [];
+  let allPlansCache = [], allWhCache = [];
   let selectedTags = new Set(), customTagsByType = {};
   let authMode = 'signin', editingRecordId = null;
   let uploadedOriginalIntroUrl = '', selectedDateFilter = '', selectedMonthFilter = '';
@@ -1860,6 +1886,11 @@
     allRecords = data || [];
     renderStats(); renderCalendar(); renderRecords();
     setGlobal(`共 ${allRecords.length} 条记录`);
+    // 后台静默拉取计划和仓库，供查重用
+    supabase.from('reading_plans').select('id,name').eq('user_id', currentUser.id)
+      .then(r => { allPlansCache = r.data || []; });
+    supabase.from('novel_warehouse').select('id,name').eq('user_id', currentUser.id)
+      .then(r => { allWhCache = r.data || []; });
   }
 
   async function saveRecord() {
@@ -2189,6 +2220,43 @@
 
   els.btnSignOut.addEventListener('click', signOut);
   els.searchInput.addEventListener('input', () => { currentPage = 1; renderRecords(); });
+  // ── 查重 ──
+  function checkDupIndex(inputName, excludeId) {
+    const q = inputName.trim().toLowerCase();
+    if (!q) return [];
+    const hits = [];
+    allRecords.forEach(r => {
+      if (String(r.id) === String(excludeId)) return;
+      if (r.name.toLowerCase().includes(q) || q.includes(r.name.toLowerCase()))
+        hits.push({ source: 'rec', name: r.name });
+    });
+    allPlansCache.forEach(p => {
+      if (p.name.toLowerCase().includes(q) || q.includes(p.name.toLowerCase()))
+        hits.push({ source: 'plan', name: p.name });
+    });
+    allWhCache.forEach(w => {
+      if (w.name.toLowerCase().includes(q) || q.includes(w.name.toLowerCase()))
+        hits.push({ source: 'wh', name: w.name });
+    });
+    return hits;
+  }
+
+  function renderDupHintIndex(hits) {
+    const el = document.getElementById('recDupHint');
+    if (!hits.length) { el.className = 'dup-hint'; el.innerHTML = ''; return; }
+    const labels = { rec: '已读记录', plan: '阅读计划', wh: '小说仓库' };
+    const esc2 = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    el.innerHTML = '⚠️ 已找到相关记录：<br>' + hits.slice(0, 5).map(h =>
+      `<span class="dup-hint-row"><span class="dup-badge ${h.source}">${labels[h.source]}</span>${esc2(h.name)}</span>`
+    ).join('');
+    el.className = 'dup-hint show';
+  }
+
+  els.name.addEventListener('input', e => {
+    renderDupHintIndex(checkDupIndex(e.target.value, editingRecordId));
+  });
+  els.recordDialog.addEventListener('close', () => renderDupHintIndex([]));
+
   els.btnOpenAdd.addEventListener('click', () => { resetForm(); loadDraft(); initAllStars(); updateRatingUI(); els.recordDialog.showModal(); });
   els.btnCloseDialog.addEventListener('click', () => els.recordDialog.close());
   document.getElementById('btnCloseView').addEventListener('click', () => document.getElementById('viewDialog').close());

@@ -533,6 +533,31 @@
       color: var(--muted);
     }
 
+    /* ── Duplicate hint ── */
+    .dup-hint {
+      font-size: 11px;
+      color: var(--accent-deep);
+      background: #fff5f3;
+      border: 1px solid var(--accent-light);
+      border-radius: 8px;
+      padding: 5px 10px;
+      margin-top: 5px;
+      line-height: 1.6;
+      display: none;
+    }
+    .dup-hint.show { display: block; }
+    .dup-hint-row { display: flex; align-items: center; gap: 5px; }
+    .dup-badge {
+      font-size: 10px;
+      padding: 0 5px;
+      border-radius: 4px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .dup-badge.rec  { background: #fde8d8; color: #b06020; }
+    .dup-badge.plan { background: #fde8f0; color: #b0306a; }
+    .dup-badge.wh   { background: #e8eef8; color: #3060b0; }
+
     /* ── Buttons ── */
     .btn-ghost {
       background: none;
@@ -743,6 +768,7 @@
       <div class="field">
         <label>书名</label>
         <input id="planName" type="text" placeholder="作品名称" />
+        <div class="dup-hint" id="planDupHint"></div>
       </div>
       <div class="grid-2">
         <div class="field">
@@ -829,6 +855,7 @@
       <div class="field">
         <label>书名</label>
         <input id="whName" type="text" placeholder="书名" />
+        <div class="dup-hint" id="whDupHint"></div>
       </div>
       <div class="grid-2">
         <div class="field">
@@ -974,6 +1001,16 @@
       );
       allPlans = planRes.data || [];
     } catch { allPlans = []; }
+
+    try {
+      const whRes = await withTimeout(
+        supabase.from('novel_warehouse').select('id,name').eq('user_id', currentUser.id),
+        6000
+      );
+      warehouseItems = (whRes.data || []).sort((a, b) =>
+        a.name.localeCompare(b.name, 'zh-CN', { sensitivity: 'base' })
+      );
+    } catch { /* 仓库加载失败不影响主流程 */ }
   }
 
   // ── Render ──
@@ -1309,6 +1346,46 @@
     document.getElementById('btnAddPlan').addEventListener('click', () => {
       if (inWarehouse) openWhForm(); else openPlanForm();
     });
+    // ── 查重 ──
+    function checkDuplicate(inputName, excludeId, excludeSource) {
+      const q = inputName.trim().toLowerCase();
+      if (!q) return [];
+      const hits = [];
+      allRecords.forEach(r => {
+        if (excludeSource === 'rec' && String(r.id) === String(excludeId)) return;
+        if (r.name.toLowerCase().includes(q) || q.includes(r.name.toLowerCase()))
+          hits.push({ source: 'rec', name: r.name });
+      });
+      allPlans.forEach(p => {
+        if (excludeSource === 'plan' && String(p.id) === String(excludeId)) return;
+        if (p.name.toLowerCase().includes(q) || q.includes(p.name.toLowerCase()))
+          hits.push({ source: 'plan', name: p.name });
+      });
+      warehouseItems.forEach(w => {
+        if (excludeSource === 'wh' && String(w.id) === String(excludeId)) return;
+        if (w.name.toLowerCase().includes(q) || q.includes(w.name.toLowerCase()))
+          hits.push({ source: 'wh', name: w.name });
+      });
+      return hits;
+    }
+
+    function renderDupHint(hintId, hits) {
+      const el = document.getElementById(hintId);
+      if (!hits.length) { el.className = 'dup-hint'; el.innerHTML = ''; return; }
+      const labels = { rec: '已读记录', plan: '阅读计划', wh: '小说仓库' };
+      el.innerHTML = '⚠️ 已找到相关记录：<br>' + hits.slice(0, 5).map(h =>
+        `<span class="dup-hint-row"><span class="dup-badge ${h.source}">${labels[h.source]}</span>${esc(h.name)}</span>`
+      ).join('');
+      el.className = 'dup-hint show';
+    }
+
+    document.getElementById('planName').addEventListener('input', e => {
+      renderDupHint('planDupHint', checkDuplicate(e.target.value, editingPlanId, 'plan'));
+    });
+    document.getElementById('whName').addEventListener('input', e => {
+      renderDupHint('whDupHint', checkDuplicate(e.target.value, editingWhId, 'wh'));
+    });
+
     document.getElementById('btnClosePlan').addEventListener('click', () => document.getElementById('planDialog').close());
     document.getElementById('btnCloseRec').addEventListener('click', () => document.getElementById('recDialog').close());
     document.getElementById('btnClosePlanDetail').addEventListener('click', () => document.getElementById('planDetailDialog').close());
@@ -1512,6 +1589,8 @@
 
   document.getElementById('btnCloseWhDetail').addEventListener('click', () => document.getElementById('warehouseDetailDialog').close());
   document.getElementById('btnCloseWhForm').addEventListener('click', () => document.getElementById('warehouseFormDialog').close());
+  document.getElementById('planDialog').addEventListener('close', () => renderDupHint('planDupHint', []));
+  document.getElementById('warehouseFormDialog').addEventListener('close', () => renderDupHint('whDupHint', []));
 
   const addWhTag = () => {
     const input = document.getElementById('whCustomTag');
