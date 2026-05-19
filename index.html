@@ -630,26 +630,24 @@
 
     /* ── Cross-library search results ── */
     #crossSearchResults:not(:empty) {
-      margin-top: 10px;
-      background: #fff;
-      border-radius: var(--radius);
+      margin-top: 6px;
+      background: #fff5f3;
+      border-radius: 12px;
       border: 1px solid var(--line);
-      box-shadow: var(--shadow);
       overflow: hidden;
     }
     .cross-head {
-      padding: 8px 16px;
-      font-size: 12px;
+      padding: 6px 14px;
+      font-size: 11px;
       font-weight: 500;
       color: var(--muted);
-      background: linear-gradient(135deg, #fdf0ec, #f8e8e4);
       border-bottom: 1px solid var(--line);
     }
     .cross-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 16px;
+      gap: 8px;
+      padding: 6px 14px;
       border-bottom: 1px solid var(--line);
       cursor: pointer;
       text-decoration: none;
@@ -1288,6 +1286,7 @@
       <span class="search-icon">🔍</span>
       <input id="searchInput" type="text" placeholder="搜索书名、标签、笔记、作者…" />
     </div>
+    <div id="crossSearchResults"></div>
     <div class="global-status" id="globalStatus"></div>
 
     <!-- Dashboard -->
@@ -1329,7 +1328,6 @@
       </div>
       <div id="recordsList"></div>
     </div>
-    <div id="crossSearchResults"></div>
   </div>
 
   <button class="fab" id="btnOpenAdd">+</button>
