@@ -147,30 +147,13 @@
     .wh-row {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 16px;
+      gap: 10px;
+      padding: 6px 16px;
       border-bottom: 1px solid var(--line);
       cursor: pointer;
       transition: background .1s;
     }
     .wh-row:hover { background: var(--soft); }
-
-    .wh-row-thumb {
-      width: 36px;
-      height: 50px;
-      object-fit: cover;
-      border-radius: 5px;
-      flex-shrink: 0;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-
-    .wh-row-thumb-ph {
-      width: 36px;
-      height: 50px;
-      border-radius: 5px;
-      background: linear-gradient(135deg, var(--accent-light), var(--soft));
-      flex-shrink: 0;
-    }
 
     .wh-row-info { flex: 1; min-width: 0; }
 
@@ -183,20 +166,33 @@
       white-space: nowrap;
     }
 
+    .wh-row-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
     .wh-row-author {
       font-size: 12px;
       color: var(--muted);
-      margin-top: 2px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .wh-has-cover {
+      font-size: 11px;
+      color: var(--accent);
+      flex-shrink: 0;
+      line-height: 1;
     }
 
     .wh-row-tags {
       display: flex;
       flex-wrap: wrap;
       gap: 4px;
-      margin-top: 5px;
+      margin-top: 4px;
     }
 
     .wh-tag {
@@ -1377,7 +1373,7 @@
     renderWarehouse();
   }
 
-  const WH_PAGE_SIZE = 30;
+  const WH_PAGE_SIZE = 20;
   let whPage = 0;
 
   function renderWarehouse() {
@@ -1395,16 +1391,16 @@
     const pageItems = warehouseItems.slice(whPage * WH_PAGE_SIZE, (whPage + 1) * WH_PAGE_SIZE);
 
     list.innerHTML = pageItems.map(item => {
-      const thumb = item.cover_url
-        ? `<img class="wh-row-thumb" src="${esc(item.cover_url)}" />`
-        : `<div class="wh-row-thumb-ph"></div>`;
+      const coverBadge = item.cover_url ? `<span class="wh-has-cover" title="有封面图">🖼</span>` : '';
       const tags = (item.tags || []).slice(0, 4)
         .map(t => `<span class="wh-tag">${esc(t)}</span>`).join('');
       return `<div class="wh-row" data-whid="${item.id}">
-        ${thumb}
         <div class="wh-row-info">
           <div class="wh-row-name">${esc(item.name)}</div>
-          ${item.author ? `<div class="wh-row-author">${esc(item.author)}</div>` : ''}
+          <div class="wh-row-meta">
+            ${item.author ? `<span class="wh-row-author">${esc(item.author)}</span>` : ''}
+            ${coverBadge}
+          </div>
           ${tags ? `<div class="wh-row-tags">${tags}</div>` : ''}
         </div>
       </div>`;
