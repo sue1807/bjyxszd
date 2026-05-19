@@ -557,6 +557,7 @@
     .dup-badge.rec  { background: #fde8d8; color: #b06020; }
     .dup-badge.plan { background: #fde8f0; color: #b0306a; }
     .dup-badge.wh   { background: #e8eef8; color: #3060b0; }
+    .dup-link:hover { background: #fce8e4; }
 
     /* ── Buttons ── */
     .btn-ghost {
@@ -976,6 +977,19 @@
     const total = allRecords.length + allPlans.length;
     setStatus(total > 0 ? `已加载 ${allRecords.length} 条记录、${allPlans.length} 个计划` : '暂无数据');
     if (btn) btn.classList.remove('spinning');
+
+    // 处理从 index.html 跳转过来的查重链接
+    const params = new URLSearchParams(location.search);
+    const openPlanId = params.get('openplan');
+    const openWhId = params.get('warehouse');
+    if (openPlanId) {
+      openPlanDetail(openPlanId);
+    } else if (openWhId) {
+      if (!inWarehouse) document.getElementById('btnGoWarehouse').click();
+      await fetchWarehouse();
+      openWhDetail(openWhId);
+    }
+    if (openPlanId || openWhId) history.replaceState(null, '', location.pathname);
   }
 
   function withTimeout(promise, ms) {
@@ -1354,17 +1368,17 @@
       allRecords.forEach(r => {
         if (excludeSource === 'rec' && String(r.id) === String(excludeId)) return;
         if (r.name.toLowerCase().includes(q) || q.includes(r.name.toLowerCase()))
-          hits.push({ source: 'rec', name: r.name });
+          hits.push({ source: 'rec', name: r.name, id: r.id });
       });
       allPlans.forEach(p => {
         if (excludeSource === 'plan' && String(p.id) === String(excludeId)) return;
         if (p.name.toLowerCase().includes(q) || q.includes(p.name.toLowerCase()))
-          hits.push({ source: 'plan', name: p.name });
+          hits.push({ source: 'plan', name: p.name, id: p.id });
       });
       warehouseItems.forEach(w => {
         if (excludeSource === 'wh' && String(w.id) === String(excludeId)) return;
         if (w.name.toLowerCase().includes(q) || q.includes(w.name.toLowerCase()))
-          hits.push({ source: 'wh', name: w.name });
+          hits.push({ source: 'wh', name: w.name, id: w.id });
       });
       return hits;
     }
@@ -1373,10 +1387,23 @@
       const el = document.getElementById(hintId);
       if (!hits.length) { el.className = 'dup-hint'; el.innerHTML = ''; return; }
       const labels = { rec: '已读记录', plan: '阅读计划', wh: '小说仓库' };
-      el.innerHTML = '⚠️ 已找到相关记录：<br>' + hits.slice(0, 5).map(h =>
-        `<span class="dup-hint-row"><span class="dup-badge ${h.source}">${labels[h.source]}</span>${esc(h.name)}</span>`
-      ).join('');
+      el.innerHTML = '⚠️ 已找到相关记录，点击查看：<br>' + hits.slice(0, 5).map(h => {
+        return `<span class="dup-hint-row dup-link" data-source="${h.source}" data-id="${h.id}" style="cursor:pointer;border-radius:5px;padding:1px 3px;">` +
+          `<span class="dup-badge ${h.source}">${labels[h.source]}</span>${esc(h.name)}</span>`;
+      }).join('');
       el.className = 'dup-hint show';
+      el.querySelectorAll('.dup-link').forEach(row => {
+        row.addEventListener('click', () => {
+          const { source, id } = row.dataset;
+          if (source === 'rec') openRecDetail(id);
+          else if (source === 'plan') { document.getElementById('planDialog').close(); openPlanDetail(id); }
+          else if (source === 'wh') {
+            document.getElementById('warehouseFormDialog').close();
+            if (!inWarehouse) document.getElementById('btnGoWarehouse').click();
+            fetchWarehouse().then(() => openWhDetail(id));
+          }
+        });
+      });
     }
 
     document.getElementById('planName').addEventListener('input', e => {

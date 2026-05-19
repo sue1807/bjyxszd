@@ -136,6 +136,8 @@
     .dup-badge.rec  { background: #fde8d8; color: #b06020; }
     .dup-badge.plan { background: #fde8f0; color: #b0306a; }
     .dup-badge.wh   { background: #e8eef8; color: #3060b0; }
+    .dup-link { display: flex; align-items: center; gap: 5px; text-decoration: none; color: inherit; border-radius: 5px; padding: 1px 3px; margin: 1px 0; cursor: pointer; }
+    .dup-link:hover { background: #fce8e4; }
 
     label {
       display: block;
@@ -2228,15 +2230,15 @@
     allRecords.forEach(r => {
       if (String(r.id) === String(excludeId)) return;
       if (r.name.toLowerCase().includes(q) || q.includes(r.name.toLowerCase()))
-        hits.push({ source: 'rec', name: r.name });
+        hits.push({ source: 'rec', name: r.name, id: r.id });
     });
     allPlansCache.forEach(p => {
       if (p.name.toLowerCase().includes(q) || q.includes(p.name.toLowerCase()))
-        hits.push({ source: 'plan', name: p.name });
+        hits.push({ source: 'plan', name: p.name, id: p.id });
     });
     allWhCache.forEach(w => {
       if (w.name.toLowerCase().includes(q) || q.includes(w.name.toLowerCase()))
-        hits.push({ source: 'wh', name: w.name });
+        hits.push({ source: 'wh', name: w.name, id: w.id });
     });
     return hits;
   }
@@ -2246,10 +2248,17 @@
     if (!hits.length) { el.className = 'dup-hint'; el.innerHTML = ''; return; }
     const labels = { rec: '已读记录', plan: '阅读计划', wh: '小说仓库' };
     const esc2 = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    el.innerHTML = '⚠️ 已找到相关记录：<br>' + hits.slice(0, 5).map(h =>
-      `<span class="dup-hint-row"><span class="dup-badge ${h.source}">${labels[h.source]}</span>${esc2(h.name)}</span>`
-    ).join('');
+    el.innerHTML = '⚠️ 已找到相关记录，点击查看：<br>' + hits.slice(0, 5).map(h => {
+      const href = h.source === 'rec' ? '#'
+        : h.source === 'plan' ? `reading-calendar.html?openplan=${h.id}`
+        : `reading-calendar.html?warehouse=${h.id}`;
+      return `<a class="dup-hint-row dup-link" href="${href}" data-source="${h.source}" data-id="${h.id}">` +
+        `<span class="dup-badge ${h.source}">${labels[h.source]}</span>${esc2(h.name)}</a>`;
+    }).join('');
     el.className = 'dup-hint show';
+    el.querySelectorAll('.dup-link[data-source="rec"]').forEach(a => {
+      a.addEventListener('click', e => { e.preventDefault(); openView(a.dataset.id); });
+    });
   }
 
   els.name.addEventListener('input', e => {
