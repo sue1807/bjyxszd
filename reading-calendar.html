@@ -935,6 +935,7 @@
   let supabase, currentUser;
   let allRecords = [], allPlans = [];
   let calYear, calMonth;
+  let inWarehouse = false;
   let editingPlanId = null;
   let selectedPlanTags = new Set();
 
@@ -978,16 +979,15 @@
     setStatus(total > 0 ? `已加载 ${allRecords.length} 条记录、${allPlans.length} 个计划` : '暂无数据');
     if (btn) btn.classList.remove('spinning');
 
-    // 处理从 index.html 跳转过来的查重链接
+    // 处理从 index.html 跳转过来的查重/搜索链接
     const params = new URLSearchParams(location.search);
     const openPlanId = params.get('openplan');
     const openWhId = params.get('warehouse');
     if (openPlanId) {
       openPlanDetail(openPlanId);
     } else if (openWhId) {
-      if (!inWarehouse) document.getElementById('btnGoWarehouse').click();
-      await fetchWarehouse();
-      openWhDetail(openWhId);
+      await fetchWarehouse();   // 拉取完整仓库数据
+      openWhDetail(openWhId);  // 直接打开详情弹窗
     }
     if (openPlanId || openWhId) history.replaceState(null, '', location.pathname);
   }
@@ -1339,7 +1339,6 @@
       renderCalendar();
     });
 
-    let inWarehouse = false;
     document.getElementById('btnGoWarehouse').addEventListener('click', () => {
       inWarehouse = !inWarehouse;
       document.getElementById('calendarWrap').classList.toggle('hidden', inWarehouse);
@@ -1399,7 +1398,6 @@
           else if (source === 'plan') { document.getElementById('planDialog').close(); openPlanDetail(id); }
           else if (source === 'wh') {
             document.getElementById('warehouseFormDialog').close();
-            if (!inWarehouse) document.getElementById('btnGoWarehouse').click();
             fetchWarehouse().then(() => openWhDetail(id));
           }
         });
