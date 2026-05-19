@@ -147,42 +147,33 @@
     .wh-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 6px 16px;
+      padding: 4px 16px;
       border-bottom: 1px solid var(--line);
       cursor: pointer;
       transition: background .1s;
+      gap: 6px;
+      min-height: 0;
     }
     .wh-row:hover { background: var(--soft); }
 
-    .wh-row-info { flex: 1; min-width: 0; }
-
     .wh-row-name {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 500;
-      color: var(--text);
-      overflow: hidden;
-      text-overflow: ellipsis;
+      color: var(--accent-deep);
       white-space: nowrap;
-    }
-
-    .wh-row-meta {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 2px;
+      flex-shrink: 0;
     }
 
     .wh-row-author {
-      font-size: 12px;
+      font-size: 10px;
+      font-weight: 300;
       color: var(--muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .wh-has-cover {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--accent);
       flex-shrink: 0;
       line-height: 1;
@@ -190,18 +181,20 @@
 
     .wh-row-tags {
       display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 4px;
+      gap: 3px;
+      overflow: hidden;
+      flex-shrink: 1;
+      min-width: 0;
     }
 
     .wh-tag {
-      font-size: 11px;
+      font-size: 9px;
       font-weight: 300;
-      padding: 1px 7px;
+      padding: 1px 5px;
       border-radius: 10px;
       background: var(--accent-light);
       color: var(--accent-deep);
+      white-space: nowrap;
     }
 
     .wh-empty-tip {
@@ -1392,17 +1385,13 @@
 
     list.innerHTML = pageItems.map(item => {
       const coverBadge = item.cover_url ? `<span class="wh-has-cover" title="有封面图">🖼</span>` : '';
-      const tags = (item.tags || []).slice(0, 4)
+      const tags = (item.tags || []).slice(0, 3)
         .map(t => `<span class="wh-tag">${esc(t)}</span>`).join('');
       return `<div class="wh-row" data-whid="${item.id}">
-        <div class="wh-row-info">
-          <div class="wh-row-name">${esc(item.name)}</div>
-          <div class="wh-row-meta">
-            ${item.author ? `<span class="wh-row-author">${esc(item.author)}</span>` : ''}
-            ${coverBadge}
-          </div>
-          ${tags ? `<div class="wh-row-tags">${tags}</div>` : ''}
-        </div>
+        <span class="wh-row-name">${esc(item.name)}</span>
+        ${item.author ? `<span class="wh-row-author">${esc(item.author)}</span>` : ''}
+        ${coverBadge}
+        ${tags ? `<div class="wh-row-tags">${tags}</div>` : ''}
       </div>`;
     }).join('');
 
