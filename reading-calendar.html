@@ -188,10 +188,10 @@
     }
 
     .wh-tag {
-      font-size: 7px;
+      font-size: 6px;
       font-weight: 300;
-      padding: 0 3px;
-      border-radius: 4px;
+      padding: 0 2px;
+      border-radius: 3px;
       background: var(--accent-light);
       color: var(--accent-deep);
       white-space: nowrap;
@@ -504,13 +504,13 @@
     /* ── Tag chips ── */
     .tag-chip {
       display: inline-block;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 12px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-size: 10px;
       background: var(--soft);
-      border: 1.5px solid var(--line);
+      border: 1px solid var(--line);
       cursor: pointer;
-      margin: 3px;
+      margin: 2px;
       transition: .15s;
       color: var(--text);
     }
@@ -527,9 +527,9 @@
       display: inline-block;
       background: var(--soft);
       border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 3px 10px;
-      font-size: 12px;
+      border-radius: 8px;
+      padding: 1px 6px;
+      font-size: 10px;
       color: var(--muted);
     }
 
@@ -879,7 +879,7 @@
   const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.APP_CONFIG;
 
   // ── Constants ──
-  const PLAN_TAGS = ['修真','种田','无限流','重生','ABO','娱乐圈','现代','古风','悬疑','星际'];
+  const PLAN_TAGS = ['种田','ABO','系统','穿书','重生','快穿','无限流','小甜饼','虐文','末世','星际','古代架空','校园','都市','娱乐圈','军旅','悬疑推理','刑侦','灵异神怪'];
 
   const TYPE_ICONS = { 'BL小说':'🌙','文学小说':'📖','非虚构书籍':'📝','广播剧':'🎧' };
 
@@ -1420,7 +1420,7 @@
     const cover = item.cover_url
       ? `<img src="${esc(item.cover_url)}" class="warehouse-detail-cover" onclick="openLightbox(this.src)" style="cursor:zoom-in;" />`
       : `<div class="warehouse-detail-cover-placeholder">📚</div>`;
-    const tags = (item.tags||[]).map(t => `<span style="font-size:11px;padding:3px 9px;border-radius:20px;background:var(--accent-light);color:var(--accent-deep);">${esc(t)}</span>`).join('');
+    const tags = (item.tags||[]).map(t => `<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:var(--accent-light);color:var(--accent-deep);">${esc(t)}</span>`).join('');
     document.getElementById('whDetailBody').innerHTML = `
       <div style="display:flex;gap:14px;margin-bottom:16px;">
         ${cover}
