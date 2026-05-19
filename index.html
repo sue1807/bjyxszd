@@ -618,6 +618,49 @@
       box-shadow: var(--shadow);
     }
 
+    /* ── Cross-library search results ── */
+    #crossSearchResults:not(:empty) {
+      margin-top: 10px;
+      background: #fff;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .cross-head {
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      background: linear-gradient(135deg, #fdf0ec, #f8e8e4);
+      border-bottom: 1px solid var(--line);
+    }
+    .cross-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--line);
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text);
+      transition: background .1s;
+    }
+    .cross-row:last-child { border-bottom: none; }
+    .cross-row:hover { background: var(--soft); }
+    .cross-source-badge {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 5px;
+      font-weight: 500;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .cross-source-badge.plan { background: #fde8f0; color: #b0306a; }
+    .cross-source-badge.wh   { background: #e8eef8; color: #3060b0; }
+    .cross-row-name { font-size: 13px; font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cross-row-author { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
     .list-head {
       padding: 10px 16px;
       display: flex;
@@ -1276,6 +1319,7 @@
       </div>
       <div id="recordsList"></div>
     </div>
+    <div id="crossSearchResults"></div>
   </div>
 
   <button class="fab" id="btnOpenAdd">+</button>
@@ -1740,6 +1784,7 @@
   // ── Records ──
   function renderRecords() {
     const keyword = els.searchInput.value.trim().toLowerCase();
+    renderCrossSearch(keyword);
     const typeFilter = els.searchInput.dataset.typefilter || '';
     const monthFilter = selectedMonthFilter;
 
@@ -1822,6 +1867,32 @@
       })()}
       <button class="page-btn" ${currentPage===totalPages?'disabled':''} data-page="${currentPage+1}">›</button>
     </div>` : ''}`;
+  }
+
+  function renderCrossSearch(keyword) {
+    const el = document.getElementById('crossSearchResults');
+    if (!keyword) { el.innerHTML = ''; return; }
+    const q = keyword.toLowerCase();
+    const planHits = allPlansCache.filter(p =>
+      [p.name, p.author||'', ...(p.tags||[])].join(' ').toLowerCase().includes(q)
+    );
+    const whHits = allWhCache.filter(w =>
+      [w.name, w.author||'', ...(w.tags||[])].join(' ').toLowerCase().includes(q)
+    );
+    if (!planHits.length && !whHits.length) { el.innerHTML = ''; return; }
+    const rows = [...planHits.map(p => ({ source: 'plan', label: '阅读计划', ...p })),
+                  ...whHits.map(w => ({ source: 'wh',   label: '小说仓库', ...w }))];
+    el.innerHTML = `<div class="cross-head">日历相关结果（点击跳转）</div>` +
+      rows.slice(0, 20).map(item => {
+        const href = item.source === 'plan'
+          ? `reading-calendar.html?openplan=${item.id}`
+          : `reading-calendar.html?warehouse=${item.id}`;
+        return `<a class="cross-row" href="${href}">
+          <span class="cross-source-badge ${item.source}">${item.label}</span>
+          <span class="cross-row-name">${esc(item.name)}</span>
+          ${item.author ? `<span class="cross-row-author">${esc(item.author)}</span>` : ''}
+        </a>`;
+      }).join('');
   }
 
   // ── Auth ──
